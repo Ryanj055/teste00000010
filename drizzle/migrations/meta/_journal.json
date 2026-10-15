@@ -8,6 +8,13 @@
       "when": 1792071555918,
       "tag": "0000_gbts_core",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792071984097,
+      "tag": "0001_restrict_helper_execution",
+      "breakpoints": true
     }
   ]
 }
