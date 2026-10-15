@@ -15,6 +15,13 @@
       "when": 1792071984097,
       "tag": "0001_restrict_helper_execution",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792072479392,
+      "tag": "0002_restrict_financial_rpc_anonymous_access",
+      "breakpoints": true
     }
   ]
 }
