@@ -1,8 +1,8 @@
 # Primeira entrega GBTS
-- [ ] Fundação: identidade, navegação, login, recuperação e permissões.
-- [ ] Clientes: cadastro, edição, consulta e arquivamento.
-- [ ] Contratos: cronograma conciliado e indicadores.
-- [ ] Financeiro: recebíveis, pagamentos parciais, despesas e dashboard.
-- [ ] Testes de cálculos, persistência, permissões e computador/celular.
+- [x] Fundação: identidade, navegação, login, recuperação e permissões.
+- [x] Clientes: cadastro, edição, consulta e arquivamento.
+- [x] Contratos: cronograma conciliado e indicadores.
+- [x] Financeiro: recebíveis, pagamentos parciais, despesas e dashboard.
+- [x] Testes de cálculos, persistência, permissões e computador/celular.
 - [ ] Contas individuais das associadas — aguardam e-mails.
-- [ ] Próximas fases: cobranças, jurídico, Excel, relatórios, administração, backups e validação de produção.
+- Próximas entregas fora desta etapa: cobranças, jurídico, Excel, relatórios, administração, backups e validação de produção.
