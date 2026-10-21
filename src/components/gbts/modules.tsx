@@ -105,7 +105,7 @@ export function ReportsPage() {
   </>;
 }
 
-type Preview = { line: number; values: Record<string, unknown>; error?: string };
+type Preview = { line: number; values: Record<string, unknown>; error?: string | undefined };
 function ImportClients({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient(); const save = useServerFn(saveClient);
   const [rows, setRows] = useState<Preview[]>([]), [busy, setBusy] = useState(false), [result, setResult] = useState('');
