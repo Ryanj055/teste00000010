@@ -9,5 +9,5 @@
 - [x] Assinatura institucional RTG Systems nas páginas e no acesso, com verificação em computador e celular na demonstração, login e recuperação.
 - [x] Preparar publicação da versão demonstrativa: testes aprovados e verificações básicas de segurança sem apontamentos; análise profunda e restauração de backups ainda não validadas para dados reais.
 - [ ] Conferência visual com acesso individual nas páginas privadas — aguarda sessão autorizada na prévia; assinatura compartilhada já verificada na demonstração.
-- [ ] Documento de finalização RTG (processos, relatórios, importação/exportação, camada de dados, README) — aguarda decisão sobre o banco de dados já ativo, que conflita com o documento.
+- [x] Documento de finalização RTG: processos, relatórios, exportação CSV, importação de clientes com prévia, README e .env.example (banco atual mantido por decisão do usuário).
 - Próximas entregas fora desta etapa: cobranças, jurídico, Excel, relatórios, administração, backups e validação de produção.
