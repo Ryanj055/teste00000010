@@ -19,4 +19,4 @@
 .footer{flex-wrap:wrap;align-items:flex-start;gap:12px 24px;line-height:1.8}
 .footer-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .login-footer .developer-signature{margin-top:10px;color:inherit}
-@media(max-width:600px){.footer{flex-direction:column;gap:10px}.footer .footer-meta,.footer .developer-signature{max-width:none;text-align:left;align-items:flex-start}.footer-meta{width:100%}}
+@media(max-width:600px){.footer{flex-direction:column;gap:10px}.footer .footer-meta,.footer .footer-meta .developer-signature{max-width:none;text-align:left;align-items:flex-start}.footer-meta{width:100%}}
