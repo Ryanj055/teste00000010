@@ -12,7 +12,7 @@ import { money, dateLabel, today } from '@/lib/gbts/finance';
 import { EntryForm, Modal, type FormKind } from './forms';
 import { toast } from 'sonner';
 import { DeveloperSignature } from './developer-signature';
-import { CasesPage, ReportsPage } from './modules';
+import { CasesPage, ReportsPage } from './office-modules';
 export type PageKind='dashboard'|'clients'|'contracts'|'receivables'|'expenses'|'cases'|'reports';
 const emptyData:WorkspaceData={clients:[],contracts:[],receivables:[],payments:[],expenses:[],cases:[]};
 const labels={dashboard:'Visão geral',clients:'Clientes',contracts:'Contratos & honorários',receivables:'Valores a receber',expenses:'Despesas',cases:'Processos jurídicos',reports:'Relatórios & planilhas'};
