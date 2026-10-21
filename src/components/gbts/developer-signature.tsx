@@ -1,3 +1,3 @@
 export function DeveloperSignature() {
-  return <span className="developer-signature">Desenvolvido por RTG Systems</span>;
+  return <span className="developer-signature">Sistema desenvolvido pela RTG Systems</span>;
 }
