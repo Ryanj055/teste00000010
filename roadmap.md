@@ -6,4 +6,6 @@
 - [x] Testes de cálculos, persistência, permissões e computador/celular.
 - [ ] Contas individuais das associadas — aguardam e-mails.
 - [x] Acesso individual de Ryan para visualizar as funções implementadas.
+- [ ] Assinatura institucional RTG Systems nas páginas e no acesso, com verificação em computador e celular.
+- [ ] Preparar publicação da versão demonstrativa após verificação de segurança.
 - Próximas entregas fora desta etapa: cobranças, jurídico, Excel, relatórios, administração, backups e validação de produção.
