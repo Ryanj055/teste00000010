@@ -216,6 +216,56 @@ export type Database = {
           },
         ]
       }
+      legal_cases: {
+        Row: {
+          client_id: string
+          created_at: string
+          deadline_note: string | null
+          demo: boolean
+          id: string
+          next_deadline: string | null
+          notes: string | null
+          number: string
+          responsible: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          deadline_note?: string | null
+          demo?: boolean
+          id?: string
+          next_deadline?: string | null
+          notes?: string | null
+          number: string
+          responsible: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          deadline_note?: string | null
+          demo?: boolean
+          id?: string
+          next_deadline?: string | null
+          notes?: string | null
+          number?: string
+          responsible?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_cases_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
