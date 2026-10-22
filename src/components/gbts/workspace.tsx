@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useRouter } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -23,7 +23,7 @@ const Context=createContext<{data:WorkspaceData;demo:boolean;open:(kind:FormKind
 export function useWorkspace(){return useContext(Context);}
 export function Status({value}:{value:string|null|undefined}){return <span className={`badge ${value==='Pago'||value==='Ativo'?'paid':value==='Vencido'?'overdue':value==='Parcialmente pago'||value==='Arquivado'||value==='Encerrado'?'partial':''}`}>{value??'—'}</span>;}
 export function Workspace({page}:{page:PageKind}){const demo=false;const router=useRouter(),navigate=useNavigate(),qc=useQueryClient();const fetcher=useServerFn(getWorkspace),accessFetcher=useServerFn(getAccess);const access=useQuery({queryKey:['access'],queryFn:()=>accessFetcher(),refetchOnWindowFocus:true});const org=access.data?.organization;const allowed=Boolean(org?.access);const {data=emptyData,isLoading,error,refetch}=useQuery({queryKey:['workspace','private'],queryFn:()=>fetcher(),enabled:allowed&&page!=='team',refetchOnWindowFocus:true});const [menu,setMenu]=useState(false),[search,setSearch]=useState(''),[form,setForm]=useState<{kind:FormKind;id?:string|undefined}|null>(null),[detail,setDetail]=useState<{type:'client'|'contract';id:string}|null>(null),[notice,setNotice]=useState(false);
-const failure=access.error??error;if(failure&&/Unauthorized|JWT|token/i.test(failure.message)){void supabase.auth.signOut().then(()=>navigate({to:'/auth',search:{expirada:'1'},replace:true}));}
+const failure=access.error??error;const expired=Boolean(failure&&/Unauthorized|JWT|token/i.test(failure.message));useEffect(()=>{if(!expired)return;qc.clear();void supabase.auth.signOut().then(()=>navigate({to:'/auth',search:{expirada:'1'},replace:true}));},[expired,qc,navigate]);
 if(access.isLoading)return <div className="login-screen"><div className="empty text-sidebar-foreground">Verificando acesso…</div></div>;
 if(access.data&&!org&&access.data.rtg){void navigate({to:'/rtg',replace:true});return null;}
 if(access.data&&(!org||!org.access))return <AccessBlocked status={org?.status??null} name={org?.name??null} rtg={access.data.rtg}/>;
