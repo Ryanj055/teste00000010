@@ -18,14 +18,14 @@ function Heading({ eyebrow, title, text, action }: { eyebrow: string; title: str
 }
 
 export function CasesPage() {
-  const { data, demo } = useWorkspace();
+  const { data } = useWorkspace();
   const [search, setSearch] = useState(''), [status, setStatus] = useState('Todos'), [edit, setEdit] = useState<string | 'new' | null>(null);
   const now = today();
   const rows = data.cases.filter((x) => {
     const client = data.clients.find((c) => c.id === x.client_id)?.name ?? '';
     return `${x.number} ${x.subject} ${client} ${x.responsible}`.toLowerCase().includes(search.toLowerCase()) && (status === 'Todos' || x.status === status);
   });
-  function start(id: string | 'new') { if (demo) { toast.info('Entre com uma conta autorizada para cadastrar processos.'); return; } setEdit(id); }
+  function start(id: string | 'new') { setEdit(id); }
   return <>
     <Heading eyebrow="ACOMPANHAMENTO ADMINISTRATIVO" title="Processos jurídicos" text="Controle interno de processos, responsáveis e prazos. Sem consulta automática aos tribunais." action={<Button onClick={() => start('new')}><Plus />Novo processo</Button>} />
     <div className="toolbar"><div className="search-field"><Search size={16} /><input aria-label="Pesquisar processos" placeholder="Número, cliente ou assunto…" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
@@ -68,7 +68,7 @@ function CaseForm({ id, onClose }: { id?: string | undefined; onClose: () => voi
 }
 
 export function ReportsPage() {
-  const { data, demo } = useWorkspace();
+  const { data } = useWorkspace();
   const [from, setFrom] = useState(today().slice(0, 7) + '-01'), [to, setTo] = useState(today()), [category, setCategory] = useState('');
   const [importOpen, setImportOpen] = useState(false);
   const inside = (d?: string | null) => Boolean(d && d >= from && d <= to);
@@ -92,7 +92,7 @@ export function ReportsPage() {
     'parcelas': () => toCsv(['Contrato', 'Parcela', 'Vencimento', 'Valor', 'Pago', 'Saldo', 'Situação'], data.receivables.filter((x) => inside(x.due_date)).map((x) => [contractOf(x.contract_id)?.number, x.label, dateLabel(x.due_date), Number(x.amount).toFixed(2).replace('.', ','), Number(x.paid).toFixed(2).replace('.', ','), Number(x.balance).toFixed(2).replace('.', ','), x.status])),
   } as const;
   return <>
-    <Heading eyebrow="RELATÓRIOS INSTITUCIONAIS" title="Relatórios & planilhas" text="Valores efetivamente recebidos e pagos no período, separados do que ainda está previsto." action={<Button variant="outline" onClick={() => demo ? toast.info('Entre com uma conta autorizada para importar planilhas.') : setImportOpen(true)}><Upload />Importar clientes</Button>} />
+    <Heading eyebrow="RELATÓRIOS INSTITUCIONAIS" title="Relatórios & planilhas" text="Valores efetivamente recebidos e pagos no período, separados do que ainda está previsto." action={<Button variant="outline" onClick={() => setImportOpen(true)}><Upload />Importar clientes</Button>} />
     <div className="toolbar"><input type="date" aria-label="Data inicial" value={from} onChange={(e) => setFrom(e.target.value)} /><input type="date" aria-label="Data final" value={to} onChange={(e) => setTo(e.target.value)} />
       <select aria-label="Categoria de despesa" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Todas as categorias</option>{categories.map((x) => <option key={x}>{x}</option>)}</select></div>
     <div className="additional-stats">{[['Recebido no período', money(received)], ['Despesas pagas', money(paid)], ['Resultado de caixa', money(received - paid)], ['Previsto a receber', money(forecast)], ['Despesas pendentes', money(pendingExp)], ['Recebimentos registrados', String(payments.length)]].map(([n, v]) => <div className="mini-stat" key={n}><span>{n}</span><strong>{v}</strong></div>)}</div>
