@@ -8,8 +8,10 @@
 - [x] Acesso individual de Ryan para visualizar as funções implementadas.
 - [x] Assinatura institucional RTG Systems nas páginas e no acesso, com verificação em computador e celular na demonstração, login e recuperação.
 - [x] Preparar publicação da versão demonstrativa: testes aprovados e verificações básicas de segurança sem apontamentos; análise profunda e restauração de backups ainda não validadas para dados reais.
-- [ ] Conferência visual com acesso individual nas páginas privadas — aguarda sessão autorizada na prévia; assinatura compartilhada já verificada na demonstração.
+- [x] Conferência visual das páginas privadas com conta temporária (computador e celular).
 - [x] Documento de finalização RTG: processos, relatórios, exportação CSV, importação de clientes com prévia, README e .env.example (banco atual mantido por decisão do usuário).
-- [ ] Correção de escopo comercial: vários escritórios isolados, painel RTG, estados de assinatura, usuários por escritório, sem demonstração em produção — aguarda aprovação do plano.
-- [ ] Publicação — adiada até a aprovação do plano comercial.
+- [x] Correção de escopo comercial: escritórios isolados, painel RTG, situação da assinatura, equipe por convite, renegociação, sessão expirada, página institucional.
+- [ ] Apagar dados fictícios do escritório GBTS — aguarda autorização.
+- [ ] Convites de Gabriella, Thais (administradoras) e definição do administrador RTG — aguardam e-mails.
+- [x] Publicação.
 - Próximas entregas fora desta etapa: cobranças, jurídico, Excel, relatórios, administração, backups e validação de produção.

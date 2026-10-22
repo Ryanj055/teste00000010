@@ -9,8 +9,10 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- GBTS uses separate domain modules and protected named routes under `_authenticated`; the public index shows only flagged fictional records for safe preview.
-- Private operations use authenticated server functions and partner-only RLS; technical admins do not automatically inherit partner access.
+- GBTS uses separate domain modules and protected named routes under `_authenticated`; the public index is institutional only and never reads office data.
+- Every business row carries `organization_id`; RLS uses `can_access(organization_id)` (active membership + server-date subscription check) so office isolation and commercial suspension are enforced in the database.
+- RTG platform admins live in `rtg_admins` and manage organizations only through definer RPCs; they never get office financial or legal data by default.
+- Private operations use authenticated server functions; `is_partner()` now means access to the caller's current organization.
 - Contracts and receipts are created through transactional database functions; amounts use decimal storage and integer-cent client calculations to preserve reconciliation.
 - The dashboard and financial statuses derive from stored receipts and due dates; never persist periodic overdue transitions or seed on page load.
 - Import the global stylesheet directly in the root module so client navigation retains institutional styling on protected screens.
