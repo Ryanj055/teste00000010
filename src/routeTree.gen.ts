@@ -21,6 +21,7 @@ import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedProcessosRouteImport } from './routes/_authenticated/processos'
 import { Route as AuthenticatedRecebiveisRouteImport } from './routes/_authenticated/recebiveis'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedRtgRouteImport } from './routes/_authenticated/rtg'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -81,6 +82,11 @@ const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   path: '/relatorios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRtgRoute = AuthenticatedRtgRouteImport.update({
+  id: '/rtg',
+  path: '/rtg',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/processos': typeof AuthenticatedProcessosRoute
   '/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/rtg': typeof AuthenticatedRtgRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/processos': typeof AuthenticatedProcessosRoute
   '/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/rtg': typeof AuthenticatedRtgRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/processos': typeof AuthenticatedProcessosRoute
   '/_authenticated/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/_authenticated/rtg': typeof AuthenticatedRtgRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/processos'
     | '/recebiveis'
     | '/relatorios'
+    | '/rtg'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/processos'
     | '/recebiveis'
     | '/relatorios'
+    | '/rtg'
   id:
     | '__root__'
     | '/'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/processos'
     | '/_authenticated/recebiveis'
     | '/_authenticated/relatorios'
+    | '/_authenticated/rtg'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rtg': {
+      id: '/_authenticated/rtg'
+      path: '/rtg'
+      fullPath: '/rtg'
+      preLoaderRoute: typeof AuthenticatedRtgRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -271,6 +290,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProcessosRoute: typeof AuthenticatedProcessosRoute
   AuthenticatedRecebiveisRoute: typeof AuthenticatedRecebiveisRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+  AuthenticatedRtgRoute: typeof AuthenticatedRtgRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -282,6 +302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProcessosRoute: AuthenticatedProcessosRoute,
   AuthenticatedRecebiveisRoute: AuthenticatedRecebiveisRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+  AuthenticatedRtgRoute: AuthenticatedRtgRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
