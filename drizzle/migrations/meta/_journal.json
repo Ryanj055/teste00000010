@@ -36,6 +36,13 @@
       "when": 1792627753700,
       "tag": "0004_multi_office_tenancy",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792799817270,
+      "tag": "0005_finance_review_and_fee_sharing",
+      "breakpoints": true
     }
   ]
 }
