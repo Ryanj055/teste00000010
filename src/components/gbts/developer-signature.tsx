@@ -1,3 +1,3 @@
 export function DeveloperSignature() {
-  return <span className="developer-signature">Sistema desenvolvido pela RTG Systems</span>;
+  return <span className="developer-signature"><strong>Desenvolvido pela RTG Systems</strong><span>“Desenvolvemos soluções digitais para simplificar processos, organizar informações e otimizar a gestão do seu negócio.”</span><span className="developer-contacts"><a href="mailto:RtgSystems@outlook.com">RtgSystems@outlook.com</a><a href="https://wa.me/5521959104060" target="_blank" rel="noopener noreferrer">(21) 95910-4060</a></span><span>© 2026 RTG Systems. Todos os direitos reservados.</span></span>;
 }
