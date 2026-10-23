@@ -10,6 +10,8 @@ import { download, parseCsv, toCsv } from '@/lib/gbts/spreadsheet';
 import { Field, Modal } from './forms';
 import { Status, useWorkspace } from './workspace';
 
+import { deadlineState } from '@/lib/gbts/review';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 const caseStatuses = ['Em andamento', 'Suspenso', 'Arquivado', 'Encerrado'] as const;
 const partners = ['Gabriella Barreto', 'Thais Sardinha'] as const;
 
@@ -18,28 +20,18 @@ function Heading({ eyebrow, title, text, action }: { eyebrow: string; title: str
 }
 
 export function CasesPage() {
-  const { data } = useWorkspace();
-  const [search, setSearch] = useState(''), [status, setStatus] = useState('Todos'), [edit, setEdit] = useState<string | 'new' | null>(null);
-  const now = today();
-  const rows = data.cases.filter((x) => {
-    const client = data.clients.find((c) => c.id === x.client_id)?.name ?? '';
-    return `${x.number} ${x.subject} ${client} ${x.responsible}`.toLowerCase().includes(search.toLowerCase()) && (status === 'Todos' || x.status === status);
-  });
-  function start(id: string | 'new') { setEdit(id); }
-  return <>
-    <Heading eyebrow="ACOMPANHAMENTO ADMINISTRATIVO" title="Processos jurídicos" text="Controle interno de processos, responsáveis e prazos. Sem consulta automática aos tribunais." action={<Button onClick={() => start('new')}><Plus />Novo processo</Button>} />
-    <div className="toolbar"><div className="search-field"><Search size={16} /><input aria-label="Pesquisar processos" placeholder="Número, cliente ou assunto…" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      <select aria-label="Filtrar situação" value={status} onChange={(e) => setStatus(e.target.value)}><option value="Todos">Todas as situações</option>{caseStatuses.map((x) => <option key={x}>{x}</option>)}</select></div>
-    <section className="panel"><div className="table-heading"><div><h2>{rows.length} processos</h2><p>Prazos são informados manualmente pela equipe</p></div></div>
-      {rows.length === 0 ? <div className="empty">Nenhum processo encontrado.</div> : <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>PROCESSO</th><th>CLIENTE</th><th>RESPONSÁVEL</th><th>PRÓXIMO PRAZO</th><th>SITUAÇÃO</th><th /></tr></thead><tbody>
-        {rows.map((x) => { const late = x.next_deadline && x.next_deadline < now && x.status === 'Em andamento';
-          return <tr key={x.id}><td><span className="cell-primary">{x.number}</span><span className="cell-secondary block">{x.subject}</span></td><td>{data.clients.find((c) => c.id === x.client_id)?.name}</td><td>{x.responsible}</td>
-            <td className={late ? 'text-destructive' : ''}>{dateLabel(x.next_deadline)}{late && ' · vencido'}<span className="cell-secondary block">{x.deadline_note}</span></td><td><Status value={x.status} /></td>
-            <td><Button variant="ghost" size="icon" aria-label={`Editar ${x.number}`} onClick={() => start(x.id)}><Pencil size={15} /></Button></td></tr>; })}
-      </tbody></table></div>}
-    </section>
-    {edit && <CaseForm id={edit === 'new' ? undefined : edit} onClose={() => setEdit(null)} />}
-  </>;
+  const {data}=useWorkspace(); const [search,setSearch]=useState(''),[status,setStatus]=useState('Todos'),[responsible,setResponsible]=useState(''),[area,setArea]=useState(''),[from,setFrom]=useState(''),[to,setTo]=useState(''),[deadline,setDeadline]=useState(''),[order,setOrder]=useState('asc'),[edit,setEdit]=useState<string|null>(null);
+  const now=today();const rows=data.cases.filter(x=>`${x.number} ${x.subject} ${data.clients.find(c=>c.id===x.client_id)?.name??''}`.toLowerCase().includes(search.toLowerCase())&&(status==='Todos'||x.status===status)&&(!responsible||x.responsible===responsible)&&(!area||(x.legal_area??'Não informada')===area)&&(!from||x.created_at.slice(0,10)>=from)&&(!to||x.created_at.slice(0,10)<=to)&&(!deadline||deadlineState(x.next_deadline,x.status,now).label===deadline)).sort((a,b)=>(a.next_deadline??'9999').localeCompare(b.next_deadline??'9999')*(order==='asc'?1:-1));
+  const grouped=(get:(x:typeof rows[number])=>string)=>[...rows.reduce((m,x)=>{const k=get(x);m.set(k,(m.get(k)??0)+1);return m;},new Map<string,number>())].map(([name,value])=>({name,value}));
+  const statusData=grouped(x=>x.status),deadlineData=grouped(x=>deadlineState(x.next_deadline,x.status,now).label),areaData=grouped(x=>x.legal_area??'Não informada');
+  const monthly=[...new Set(rows.flatMap(x=>[x.created_at.slice(0,7),...(x.closed_at?[x.closed_at.slice(0,7)]:[])]))].sort().map(month=>({name:month.slice(5)+'/'+month.slice(0,4),created:rows.filter(x=>x.created_at.startsWith(month)).length,closed:rows.filter(x=>x.closed_at?.startsWith(month)).length}));
+  function chart(title:string,values:{name:string;value:number}[],click:(name:string)=>void){return <section className="panel"><div className="table-heading"><h2>{title}</h2></div>{!values.length?<div className="empty">Nenhum processo para os filtros.</div>:<div className="chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={values}><CartesianGrid stroke="var(--border)" vertical={false}/><XAxis dataKey="name" tick={{fontSize:9,fill:'var(--muted-foreground)'}} interval={0}/><YAxis allowDecimals={false} width={30}/><Tooltip/><Bar dataKey="value" name="Processos" fill="var(--info)" onClick={x=>click(String(x.name))}/></BarChart></ResponsiveContainer></div>}</section>;}
+  return <><Heading eyebrow="ACOMPANHAMENTO ADMINISTRATIVO" title="Processos jurídicos" text="Processos, próximos prazos e providências do escritório." action={<Button onClick={()=>setEdit('new')}><Plus/>Novo processo</Button>}/>
+  <div className="toolbar"><div className="search-field"><Search size={16}/><input aria-label="Pesquisar processos" placeholder="Número, cliente ou assunto" value={search} onChange={e=>setSearch(e.target.value)}/></div><select aria-label="Filtrar situação" value={status} onChange={e=>setStatus(e.target.value)}><option>Todos</option>{caseStatuses.map(x=><option key={x}>{x}</option>)}</select><select aria-label="Responsável" value={responsible} onChange={e=>setResponsible(e.target.value)}><option value="">Todos os responsáveis</option>{[...new Set(data.cases.map(x=>x.responsible))].map(x=><option key={x}>{x}</option>)}</select><select aria-label="Área jurídica" value={area} onChange={e=>setArea(e.target.value)}><option value="">Todas as áreas</option>{[...new Set(data.cases.map(x=>x.legal_area??'Não informada'))].map(x=><option key={x}>{x}</option>)}</select></div>
+  <div className="toolbar"><Field label="Data de cadastro inicial"><input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></Field><Field label="Data de cadastro final"><input type="date" value={to} onChange={e=>setTo(e.target.value)}/></Field><Field label="Situação do prazo"><select value={deadline} onChange={e=>setDeadline(e.target.value)}><option value="">Todos os prazos</option>{['Em dia','Próximo','Vencido','Sem prazo','Não aplicável'].map(x=><option key={x}>{x}</option>)}</select></Field><Field label="Ordenação por prazo"><select value={order} onChange={e=>setOrder(e.target.value)}><option value="asc">Mais próximo primeiro</option><option value="desc">Mais distante primeiro</option></select></Field></div>
+  <div className="additional-stats">{[['Total',rows.length],['Ativos',rows.filter(x=>x.status==='Em andamento').length],['Encerrados',rows.filter(x=>x.status==='Encerrado').length],['Prazo próximo',rows.filter(x=>deadlineState(x.next_deadline,x.status,now).label==='Próximo').length],['Prazo vencido',rows.filter(x=>deadlineState(x.next_deadline,x.status,now).label==='Vencido').length],['Sem prazo',rows.filter(x=>!x.next_deadline).length]].map(([n,v])=><div className="mini-stat" key={n}><span>{n}</span><strong>{v}</strong></div>)}</div>
+  <div className="chart-layout">{chart('Processos por status',statusData,setStatus)}{chart('Situação dos prazos',deadlineData,setDeadline)}{chart('Processos por área jurídica',areaData,setArea)}<section className="panel"><div className="table-heading"><h2>Evolução mensal · cadastro e encerramento</h2></div>{monthly.length?<div className="chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={monthly}><XAxis dataKey="name" tick={{fontSize:10}}/><YAxis allowDecimals={false} width={30}/><Tooltip/><Bar name="Cadastrados" dataKey="created" fill="var(--info)"/><Bar name="Encerrados com data" dataKey="closed" fill="var(--success)"/></BarChart></ResponsiveContainer></div>:<div className="empty">Sem datas suficientes.</div>}{rows.some(x=>x.status==='Encerrado'&&!x.closed_at)&&<p className="form-note">Encerramentos sem data não entram na evolução mensal.</p>}</section></div>
+  <section className="panel"><div className="table-heading"><h2>{rows.length} processos</h2></div>{!rows.length?<div className="empty">Nenhum processo encontrado.</div>:rows.map(x=>{const d=deadlineState(x.next_deadline,x.status,now);return <div className="mobile-row case-row" key={x.id}><div className="flex-1"><strong>{x.number}</strong><div className="cell-secondary">{x.subject} · {data.clients.find(c=>c.id===x.client_id)?.name}</div><div className="cell-secondary">{x.responsible} · {x.legal_area??'Área não informada'}</div><div className={d.label==='Vencido'?'text-destructive':d.label==='Próximo'?'text-info':'text-muted-foreground'}>Prazo: {dateLabel(x.next_deadline)} · {d.label}{d.days!==null&&` · ${d.days<0?'Vencido há '+Math.abs(d.days)+' dias':d.days===0?'Hoje':'Faltam '+d.days+' dias'}`}</div>{x.deadline_note&&<div className="cell-secondary">Próxima providência: {x.deadline_note}</div>}</div><div className="right"><Status value={x.status}/><Button variant="ghost" size="icon" aria-label={`Editar ${x.number}`} onClick={()=>setEdit(x.id)}><Pencil size={15}/></Button></div></div>;})}</section>{edit&&<CaseForm id={edit==='new'?undefined:edit} onClose={()=>setEdit(null)}/>}</>;
 }
 
 function CaseForm({ id, onClose }: { id?: string | undefined; onClose: () => void }) {
@@ -48,7 +40,7 @@ function CaseForm({ id, onClose }: { id?: string | undefined; onClose: () => voi
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const f = new FormData(e.currentTarget); const g = (k: string) => String(f.get(k) ?? '');
-    const parsed = caseSchema.safeParse({ id, number: g('number'), client_id: g('client_id'), subject: g('subject'), responsible: g('responsible'), status: g('status'), next_deadline: g('next_deadline') || null, deadline_note: g('deadline_note'), notes: g('notes') });
+    const parsed = caseSchema.safeParse({ id, number: g('number'), client_id: g('client_id'), subject: g('subject'), responsible: g('responsible'), status: g('status'), next_deadline: g('next_deadline') || null, deadline_note: g('deadline_note'), notes: g('notes'),legal_area:g('legal_area')||null,closed_at:g('closed_at')||null });
     if (!parsed.success) { setError('Preencha número, cliente, assunto e responsável corretamente.'); return; }
     setBusy(true); setError('');
     try { await save({ data: parsed.data }); toast.success('Processo salvo.'); await qc.invalidateQueries({ queryKey: ['workspace'] }); onClose(); }
@@ -58,10 +50,10 @@ function CaseForm({ id, onClose }: { id?: string | undefined; onClose: () => voi
     <Field label="Número do processo"><input name="number" required maxLength={60} defaultValue={current?.number} /></Field>
     <Field label="Cliente"><select name="client_id" required defaultValue={current?.client_id ?? ''}><option value="" disabled>Selecione</option>{data.clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
     <Field label="Assunto" full><input name="subject" required maxLength={500} defaultValue={current?.subject} /></Field>
-    <Field label="Responsável"><select name="responsible" defaultValue={current?.responsible ?? partners[0]}>{partners.map((x) => <option key={x}>{x}</option>)}</select></Field>
+    <Field label="Pessoa responsável"><input name="responsible" required maxLength={150} defaultValue={current?.responsible??partners[0]}/></Field><Field label="Área jurídica"><input name="legal_area" maxLength={100} defaultValue={current?.legal_area??''}/></Field><Field label="Data de encerramento (se encerrado)"><input type="date" name="closed_at" max={today()} defaultValue={current?.closed_at??''}/></Field>
     <Field label="Situação"><select name="status" defaultValue={current?.status ?? 'Em andamento'}>{caseStatuses.map((x) => <option key={x}>{x}</option>)}</select></Field>
     <Field label="Próximo prazo"><input type="date" name="next_deadline" defaultValue={current?.next_deadline ?? ''} /></Field>
-    <Field label="Descrição do prazo"><input name="deadline_note" maxLength={300} defaultValue={current?.deadline_note ?? ''} /></Field>
+    <Field label="Próxima providência / descrição do prazo"><input name="deadline_note" maxLength={300} defaultValue={current?.deadline_note ?? ''} /></Field>
     <Field label="Observações" full><textarea name="notes" rows={3} maxLength={2000} defaultValue={current?.notes ?? ''} /></Field>
   </div>{error && <div className="form-error" role="alert">{error}</div>}</div>
   <div className="modal-footer"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button disabled={busy}>{busy ? 'Salvando…' : 'Salvar processo'}</Button></div></form></Modal>;
@@ -75,14 +67,17 @@ export function ReportsPage() {
   const categories = [...new Set(data.expenses.map((x) => x.category))];
   const payments = data.payments.filter((x) => inside(x.paid_at));
   const expenses = data.expenses.filter((x) => (!category || x.category === category) && inside(x.paid_at ?? x.due_date));
-  const received = payments.reduce((s, x) => s + x.amount, 0);
+  const payouts = data.payoutLedger.filter(x=>inside(x.effective_date));const repassed=payouts.reduce((s,x)=>s+Number(x.amount),0);
+  const ledger=data.ledger.filter(x=>inside(x.effective_date));
+  const received = ledger.map(x=>({...x,amount:Number(x.amount)})).reduce((s, x) => s + x.amount, 0);
   const paid = expenses.filter((x) => x.status === 'Pago' && !x.reimbursable).reduce((s, x) => s + x.amount, 0);
   const forecast = data.receivables.filter((x) => inside(x.due_date) && Number(x.balance) > 0).reduce((s, x) => s + Number(x.balance), 0);
   const pendingExp = expenses.filter((x) => x.status === 'Pendente' && !x.reimbursable).reduce((s, x) => s + x.amount, 0);
   const months = useMemo(() => { const m = new Map<string, { in: number; out: number }>();
-    payments.forEach((p) => { const k = p.paid_at.slice(0, 7); const v = m.get(k) ?? { in: 0, out: 0 }; v.in += p.amount; m.set(k, v); });
+    ledger.forEach((p) => { const k = String(p.effective_date).slice(0, 7); const v = m.get(k) ?? { in: 0, out: 0 }; v.in += Number(p.amount); m.set(k, v); });
     expenses.filter((x) => x.status === 'Pago' && !x.reimbursable && x.paid_at).forEach((x) => { const k = String(x.paid_at).slice(0, 7); const v = m.get(k) ?? { in: 0, out: 0 }; v.out += x.amount; m.set(k, v); });
-    return [...m.entries()].sort(([a], [b]) => a.localeCompare(b)); }, [payments, expenses]);
+    payouts.forEach(p=>{const k=String(p.effective_date).slice(0,7);const v=m.get(k)??{in:0,out:0};v.out+=Number(p.amount);m.set(k,v);});
+    return [...m.entries()].sort(([a], [b]) => a.localeCompare(b)); }, [ledger, expenses, payouts]);
   const contractOf = (id?: string | null) => data.contracts.find((c) => c.id === id);
   const clientOf = (id?: string | null) => data.clients.find((c) => c.id === id)?.name ?? '';
   const exports = {
@@ -93,13 +88,13 @@ export function ReportsPage() {
   } as const;
   return <>
     <Heading eyebrow="RELATÓRIOS INSTITUCIONAIS" title="Relatórios & planilhas" text="Valores efetivamente recebidos e pagos no período, separados do que ainda está previsto." action={<Button variant="outline" onClick={() => setImportOpen(true)}><Upload />Importar clientes</Button>} />
-    <div className="toolbar"><input type="date" aria-label="Data inicial" value={from} onChange={(e) => setFrom(e.target.value)} /><input type="date" aria-label="Data final" value={to} onChange={(e) => setTo(e.target.value)} />
+    <div className="toolbar"><label>Período inicial<input type="date" aria-label="Data inicial" value={from} onChange={(e) => setFrom(e.target.value)} /></label><label>Período final<input type="date" aria-label="Data final" value={to} onChange={(e) => setTo(e.target.value)} /></label>
       <select aria-label="Categoria de despesa" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Todas as categorias</option>{categories.map((x) => <option key={x}>{x}</option>)}</select></div>
-    <div className="additional-stats">{[['Recebido no período', money(received)], ['Despesas pagas', money(paid)], ['Resultado de caixa', money(received - paid)], ['Previsto a receber', money(forecast)], ['Despesas pendentes', money(pendingExp)], ['Recebimentos registrados', String(payments.length)]].map(([n, v]) => <div className="mini-stat" key={n}><span>{n}</span><strong>{v}</strong></div>)}</div>
+    <div className="additional-stats">{[['Recebido no período', money(received)], ['Repasses efetivos',money(repassed)],['Despesas pagas', money(paid)], ['Resultado de caixa', money(received - paid - repassed)], ['Previsto a receber', money(forecast)], ['Despesas pendentes', money(pendingExp)], ['Recebimentos registrados', String(payments.length)]].map(([n, v]) => <div className="mini-stat" key={n}><span>{n}</span><strong>{v}</strong></div>)}</div>
     <div className="chart-layout"><section className="panel"><div className="table-heading"><div><h2>Fluxo de caixa mensal</h2><p>Somente movimentações realizadas</p></div></div>
       {months.length === 0 ? <div className="empty">Nenhuma movimentação no período.</div> : <table className="data-table"><thead><tr><th>MÊS</th><th>RECEBIDO</th><th>PAGO</th><th>RESULTADO</th></tr></thead><tbody>{months.map(([m, v]) => <tr key={m}><td>{m.slice(5)}/{m.slice(0, 4)}</td><td className="amount">{money(v.in)}</td><td>{money(v.out)}</td><td className="amount">{money(v.in - v.out)}</td></tr>)}</tbody></table>}
     </section><section className="panel"><div className="table-heading"><div><h2>Exportar planilhas</h2><p>Arquivos CSV que abrem no Excel</p></div></div><div className="quick-actions">
-      {(Object.keys(exports) as (keyof typeof exports)[]).map((k) => <Button key={k} variant="outline" className="quick-button" onClick={() => { download(`gbts-${k}-${from}-a-${to}.csv`, exports[k]()); toast.success('Planilha gerada.'); }}><Download size={18} />Exportar {k}</Button>)}
+      {(Object.keys(exports) as (keyof typeof exports)[]).map((k) => <Button key={k} variant="outline" className="quick-button" onClick={() => { download(`gestao-${k}-${from}-a-${to}.csv`, exports[k]()); toast.success('Planilha gerada.'); }}><Download size={18} />Exportar {k}</Button>)}
     </div></section></div>
     {importOpen && <ImportClients onClose={() => setImportOpen(false)} />}
   </>;
