@@ -14,4 +14,14 @@
 - [ ] Apagar dados fictícios do escritório GBTS — aguarda autorização.
 - [ ] Convites de Gabriella, Thais (administradoras) e definição do administrador RTG — aguardam e-mails.
 - [x] Publicação.
-- Próximas entregas fora desta etapa: cobranças, jurídico, Excel, relatórios, administração, backups e validação de produção.
+## Revisão e finalização solicitada em 23/10/2026
+- [ ] Cobranças: histórico, correções e estornos conciliados.
+- [ ] Honorários: associados, divisões, versões e repasses reais.
+- [ ] Processos: indicadores, gráficos, áreas, filtros e prazos reais.
+- [ ] Clientes: remoção segura ou arquivamento com confirmação.
+- [ ] Despesas: categoria personalizada e pesquisa.
+- [ ] Contratos: modalidades funcionais, pagamento previsto e datas identificadas.
+- [ ] Linguagem neutra, nome sem sigla e rodapé RTG com contatos.
+- [ ] Revisão móvel 360/390/430 px e computador.
+- [ ] Testes reais, documentação e relatório de pendências.
+- [ ] Validação de restauração de backup e LGPD — exige processo operacional antes de dados reais.
