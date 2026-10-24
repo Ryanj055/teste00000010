@@ -15,6 +15,7 @@
 - Private operations use authenticated server functions; `is_partner()` now means access to the caller's current organization.
 - Contracts and receipts are created through transactional database functions; amounts use decimal storage and integer-cent client calculations to preserve reconciliation.
 - The dashboard and financial statuses derive from stored receipts and due dates; never persist periodic overdue transitions or seed on page load.
+- Workspace reads exclude demo-tagged rows and paginate all tables; shared indicator helpers group only stored movements, and the workspace refreshes periodically plus on successful mutations to keep every screen consistent.
 - Import the global stylesheet directly in the root module so client navigation retains institutional styling on protected screens.
 - Use the shared developer signature in application and access footers only; keep technology attribution separate from legal documents and financial content.
 - New demonstration data uses database data tools because the migration tool accepts DDL only; production preparation must establish isolated environments before real records are introduced.
