@@ -18,3 +18,4 @@
 - Import the global stylesheet directly in the root module so client navigation retains institutional styling on protected screens.
 - Use the shared developer signature in application and access footers only; keep technology attribution separate from legal documents and financial content.
 - New demonstration data uses database data tools because the migration tool accepts DDL only; production preparation must establish isolated environments before real records are introduced.
+- Financial review uses authenticated domain functions and immutable division versions, reversal ledgers, and archived installment snapshots so corrections remain auditable without double-counting cash.
