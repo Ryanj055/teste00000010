@@ -73,7 +73,7 @@ export const inviteMember = createServerFn({ method: 'POST' }).middleware([requi
       context.supabase.rpc('is_rtg_admin'), context.supabase.rpc('is_org_admin'), context.supabase.rpc('current_org'),
     ]);
     const org = rtg && data.organization_id ? data.organization_id : isAdmin ? (own as string | null) : null;
-    if (!org) throw new Error('Você não tem permissão para convidar usuárias.');
+    if (!org) throw new Error('Você não tem permissão para convidar pessoas.');
     const redirect = new URL(data.redirect);
     redirect.pathname = '/reset-password';
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
@@ -82,7 +82,7 @@ export const inviteMember = createServerFn({ method: 'POST' }).middleware([requi
     const invited = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, { redirectTo: redirect.toString() });
     if (invited.error || !invited.data.user) throw new Error('Não foi possível enviar o convite. Verifique se o e-mail já possui conta.');
     const inserted = await supabaseAdmin.from('organization_members').insert({ organization_id: org, user_id: invited.data.user.id, email: data.email, role: data.role });
-    if (inserted.error) throw new Error('Convite enviado, mas não foi possível vincular a usuária. Contate o suporte.');
-    await supabaseAdmin.from('admin_events').insert({ organization_id: org, actor: context.userId, action: 'Usuária convidada', details: { email: data.email, papel: data.role } });
+    if (inserted.error) throw new Error('Convite enviado, mas não foi possível vincular a pessoa. Contate o suporte.');
+    await supabaseAdmin.from('admin_events').insert({ organization_id: org, actor: context.userId, action: 'Pessoa convidada', details: { email: data.email, papel: data.role } });
     return true;
   });
