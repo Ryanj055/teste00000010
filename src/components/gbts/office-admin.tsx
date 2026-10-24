@@ -22,7 +22,7 @@ async function signOutTo(navigate: ReturnType<typeof useNavigate>, qc: ReturnTyp
 
 export function AccessBlocked({ status, name, rtg }: { status: OrgStatus | null; name: string | null; rtg: boolean }) {
   const navigate = useNavigate(), qc = useQueryClient();
-  const message = !status ? 'Sua conta não está vinculada a um escritório ativo. Solicite um convite à administradora do seu escritório.'
+  const message = !status ? 'Sua conta não está vinculada a um escritório ativo. Solicite um convite à administração do seu escritório.'
     : status === 'suspended' ? 'O acesso do escritório está suspenso. Os dados estão preservados e o acesso volta assim que a situação for regularizada com a RTG Systems.'
     : status === 'closed' ? 'A assinatura deste escritório foi encerrada. Os dados permanecem preservados; entre em contato com a RTG Systems.'
     : 'O período contratado ou de teste terminou. Entre em contato com a RTG Systems para renovar o acesso.';
@@ -73,19 +73,19 @@ export function TeamPage() {
     try { await update({ data: { id, active, role } }); toast.success('Acesso atualizado.'); await qc.invalidateQueries({ queryKey: ['members'] }); }
     catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar.'); }
   }
-  return <><div className="page-heading"><div><div className="eyebrow">ADMINISTRAÇÃO DO ESCRITÓRIO</div><h1>Equipe e acessos</h1><p>Convide, desative ou altere o papel das usuárias do seu escritório.</p></div></div>
-    <section className="panel mb-6"><div className="table-heading"><div><h2>Convidar usuária</h2><p>A pessoa recebe um e-mail para definir a própria senha</p></div></div>
-      <form className="toolbar !m-0 p-5 flex-wrap" onSubmit={send}><input name="email" type="email" required maxLength={255} placeholder="E-mail da usuária" aria-label="E-mail" className="!max-w-sm" />
-        <select name="role" aria-label="Papel" defaultValue="member"><option value="member">Usuária</option><option value="admin">Administradora</option></select><Button disabled={busy}><UserPlus />{busy ? 'Enviando…' : 'Enviar convite'}</Button></form></section>
+  return <><div className="page-heading"><div><div className="eyebrow">ADMINISTRAÇÃO DO ESCRITÓRIO</div><h1>Equipe e acessos</h1><p>Convide, desative ou altere o papel da equipe do seu escritório.</p></div></div>
+    <section className="panel mb-6"><div className="table-heading"><div><h2>Convidar pessoa</h2><p>A pessoa recebe um e-mail para definir a própria senha</p></div></div>
+      <form className="toolbar !m-0 p-5 flex-wrap" onSubmit={send}><input name="email" type="email" required maxLength={255} placeholder="E-mail da pessoa" aria-label="E-mail" className="!max-w-sm" />
+        <select name="role" aria-label="Papel" defaultValue="member"><option value="member">Usuário</option><option value="admin">Administrador</option></select><Button disabled={busy}><UserPlus />{busy ? 'Enviando…' : 'Enviar convite'}</Button></form></section>
     <section className="panel">{q.isLoading ? <div className="empty">Carregando equipe…</div> : q.error ? <div className="empty">{q.error.message}</div> :
       <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>E-MAIL</th><th>PAPEL</th><th>SITUAÇÃO</th><th>DESDE</th><th /></tr></thead><tbody>
         {q.data?.members.map((m) => { const self = m.user_id === q.data.me; const role = m.role === 'admin' ? 'admin' : 'member';
           return <tr key={m.id}><td>{m.email}{self && <span className="cell-secondary block">Você</span>}</td>
-            <td><select aria-label={`Papel de ${m.email}`} disabled={self} value={role} onChange={(e) => change(m.id, m.active, e.target.value === 'admin' ? 'admin' : 'member')}><option value="member">Usuária</option><option value="admin">Administradora</option></select></td>
-            <td><span className={`badge ${m.active ? 'paid' : 'partial'}`}>{m.active ? 'Ativa' : 'Desativada'}</span></td><td>{dateLabel(m.created_at)}</td>
+            <td><select aria-label={`Papel de ${m.email}`} disabled={self} value={role} onChange={(e) => change(m.id, m.active, e.target.value === 'admin' ? 'admin' : 'member')}><option value="member">Usuário</option><option value="admin">Administrador</option></select></td>
+            <td><span className={`badge ${m.active ? 'paid' : 'partial'}`}>{m.active ? 'Ativo' : 'Desativado'}</span></td><td>{dateLabel(m.created_at)}</td>
             <td>{!self && (m.active ? <Button variant="outline" size="sm" onClick={() => setConfirmOff({ id: m.id, email: m.email, role })}>Desativar</Button> : <Button variant="outline" size="sm" onClick={() => change(m.id, true, role)}>Reativar</Button>)}</td></tr>; })}
       </tbody></table></div>}</section>
-    {confirmOff && <Modal title="Desativar acesso" onClose={() => setConfirmOff(null)}><div className="modal-body"><p className="text-sm">{confirmOff.email} deixará de acessar o escritório. Os registros criados por ela são preservados.</p></div>
+    {confirmOff && <Modal title="Desativar acesso" onClose={() => setConfirmOff(null)}><div className="modal-body"><p className="text-sm">{confirmOff.email} deixará de acessar o escritório. Os registros criados pela pessoa são preservados.</p></div>
       <div className="modal-footer"><Button variant="outline" onClick={() => setConfirmOff(null)}>Cancelar</Button><Button variant="destructive" onClick={async () => { await change(confirmOff.id, false, confirmOff.role); setConfirmOff(null); }}>Desativar</Button></div></Modal>}
   </>;
 }

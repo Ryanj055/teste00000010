@@ -29,7 +29,7 @@ function RtgPanel() {
     <main className="content">
       <div className="page-heading"><div><h1>Escritórios clientes</h1><p>Assinaturas, períodos de teste e situação de acesso. Este painel não exibe dados jurídicos nem financeiros dos escritórios.</p></div><Button onClick={() => setEdit('new')}><Plus />Novo escritório</Button></div>
       {q.isLoading ? <div className="empty">Carregando…</div> : q.error ? <div className="empty">{q.error.message}</div> : <>
-        <section className="panel mb-6"><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>ESCRITÓRIO</th><th>PLANO</th><th>SITUAÇÃO</th><th>INÍCIO</th><th>VENCIMENTO / TESTE</th><th>USUÁRIAS</th><th /></tr></thead><tbody>
+        <section className="panel mb-6"><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>ESCRITÓRIO</th><th>PLANO</th><th>SITUAÇÃO</th><th>INÍCIO</th><th>VENCIMENTO / TESTE</th><th>EQUIPE</th><th /></tr></thead><tbody>
           {q.data?.organizations.map((o) => <tr key={o.id}><td><span className="cell-primary">{o.name}</span><span className="cell-secondary block">{o.contact_name} {o.contact_email}</span></td><td>{o.plan}</td>
             <td><span className={`badge ${o.status === 'active' ? 'paid' : o.status === 'suspended' || o.status === 'closed' ? 'overdue' : 'partial'}`}>{statusLabel(o.status)}</span></td>
             <td>{dateLabel(o.starts_at)}</td><td>{o.status === 'trial' ? dateLabel(o.trial_ends_at) : dateLabel(o.ends_at)}</td>
@@ -79,7 +79,7 @@ function InviteForm({ org, onClose }: { org: Org; onClose: () => void }) {
   }
   return <Modal title={`Convidar para ${org.name}`} onClose={onClose}><form onSubmit={submit}><div className="modal-body"><div className="form-grid">
     <Field label="E-mail"><input name="email" type="email" required maxLength={255} /></Field>
-    <Field label="Papel"><select name="role" defaultValue="admin"><option value="admin">Administradora do escritório</option><option value="member">Usuária</option></select></Field>
+    <Field label="Papel"><select name="role" defaultValue="admin"><option value="admin">Administrador do escritório</option><option value="member">Usuário</option></select></Field>
   </div>{error && <div className="form-error" role="alert">{error}</div>}</div>
   <div className="modal-footer"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button disabled={busy}>{busy ? 'Enviando…' : 'Enviar convite'}</Button></div></form></Modal>;
 }

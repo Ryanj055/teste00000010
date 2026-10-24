@@ -14,10 +14,12 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedCobrancasRouteImport } from './routes/_authenticated/cobrancas'
 import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDespesasRouteImport } from './routes/_authenticated/despesas'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
+import { Route as AuthenticatedHonorariosRouteImport } from './routes/_authenticated/honorarios'
 import { Route as AuthenticatedProcessosRouteImport } from './routes/_authenticated/processos'
 import { Route as AuthenticatedRecebiveisRouteImport } from './routes/_authenticated/recebiveis'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
@@ -47,6 +49,11 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCobrancasRoute = AuthenticatedCobrancasRouteImport.update({
+  id: '/cobrancas',
+  path: '/cobrancas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedContratosRoute = AuthenticatedContratosRouteImport.update({
   id: '/contratos',
   path: '/contratos',
@@ -65,6 +72,11 @@ const AuthenticatedDespesasRoute = AuthenticatedDespesasRouteImport.update({
 const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHonorariosRoute = AuthenticatedHonorariosRouteImport.update({
+  id: '/honorarios',
+  path: '/honorarios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProcessosRoute = AuthenticatedProcessosRouteImport.update({
@@ -93,10 +105,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/cobrancas': typeof AuthenticatedCobrancasRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/despesas': typeof AuthenticatedDespesasRoute
   '/equipe': typeof AuthenticatedEquipeRoute
+  '/honorarios': typeof AuthenticatedHonorariosRoute
   '/processos': typeof AuthenticatedProcessosRoute
   '/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -107,10 +121,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/cobrancas': typeof AuthenticatedCobrancasRoute
   '/contratos': typeof AuthenticatedContratosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/despesas': typeof AuthenticatedDespesasRoute
   '/equipe': typeof AuthenticatedEquipeRoute
+  '/honorarios': typeof AuthenticatedHonorariosRoute
   '/processos': typeof AuthenticatedProcessosRoute
   '/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -123,10 +139,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/cobrancas': typeof AuthenticatedCobrancasRoute
   '/_authenticated/contratos': typeof AuthenticatedContratosRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/despesas': typeof AuthenticatedDespesasRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
+  '/_authenticated/honorarios': typeof AuthenticatedHonorariosRoute
   '/_authenticated/processos': typeof AuthenticatedProcessosRoute
   '/_authenticated/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -139,10 +157,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/clientes'
+    | '/cobrancas'
     | '/contratos'
     | '/dashboard'
     | '/despesas'
     | '/equipe'
+    | '/honorarios'
     | '/processos'
     | '/recebiveis'
     | '/relatorios'
@@ -153,10 +173,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/clientes'
+    | '/cobrancas'
     | '/contratos'
     | '/dashboard'
     | '/despesas'
     | '/equipe'
+    | '/honorarios'
     | '/processos'
     | '/recebiveis'
     | '/relatorios'
@@ -168,10 +190,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/clientes'
+    | '/_authenticated/cobrancas'
     | '/_authenticated/contratos'
     | '/_authenticated/dashboard'
     | '/_authenticated/despesas'
     | '/_authenticated/equipe'
+    | '/_authenticated/honorarios'
     | '/_authenticated/processos'
     | '/_authenticated/recebiveis'
     | '/_authenticated/relatorios'
@@ -222,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cobrancas': {
+      id: '/_authenticated/cobrancas'
+      path: '/cobrancas'
+      fullPath: '/cobrancas'
+      preLoaderRoute: typeof AuthenticatedCobrancasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/contratos': {
       id: '/_authenticated/contratos'
       path: '/contratos'
@@ -248,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/equipe'
       fullPath: '/equipe'
       preLoaderRoute: typeof AuthenticatedEquipeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/honorarios': {
+      id: '/_authenticated/honorarios'
+      path: '/honorarios'
+      fullPath: '/honorarios'
+      preLoaderRoute: typeof AuthenticatedHonorariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/processos': {
@@ -283,10 +321,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedCobrancasRoute: typeof AuthenticatedCobrancasRoute
   AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDespesasRoute: typeof AuthenticatedDespesasRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
+  AuthenticatedHonorariosRoute: typeof AuthenticatedHonorariosRoute
   AuthenticatedProcessosRoute: typeof AuthenticatedProcessosRoute
   AuthenticatedRecebiveisRoute: typeof AuthenticatedRecebiveisRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
@@ -295,10 +335,12 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedCobrancasRoute: AuthenticatedCobrancasRoute,
   AuthenticatedContratosRoute: AuthenticatedContratosRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDespesasRoute: AuthenticatedDespesasRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
+  AuthenticatedHonorariosRoute: AuthenticatedHonorariosRoute,
   AuthenticatedProcessosRoute: AuthenticatedProcessosRoute,
   AuthenticatedRecebiveisRoute: AuthenticatedRecebiveisRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,

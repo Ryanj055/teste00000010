@@ -49,6 +49,38 @@ export type Database = {
           },
         ]
       }
+      associates: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          organization_id?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "associates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -151,6 +183,7 @@ export type Database = {
           client_id: string
           created_at: string
           demo: boolean
+          expected_method: string | null
           id: string
           modality: string
           notes: string | null
@@ -166,6 +199,7 @@ export type Database = {
           client_id: string
           created_at?: string
           demo?: boolean
+          expected_method?: string | null
           id?: string
           modality?: string
           notes?: string | null
@@ -181,6 +215,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           demo?: boolean
+          expected_method?: string | null
           id?: string
           modality?: string
           notes?: string | null
@@ -259,6 +294,184 @@ export type Database = {
           },
         ]
       }
+      fee_divisions: {
+        Row: {
+          allocations: Json
+          basis: string
+          contract_id: string
+          created_at: string
+          id: string
+          mode: string
+          organization_id: string
+          reason: string
+          user_id: string | null
+          version: number
+        }
+        Insert: {
+          allocations: Json
+          basis: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          mode: string
+          organization_id?: string
+          reason: string
+          user_id?: string | null
+          version: number
+        }
+        Update: {
+          allocations?: Json
+          basis?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          mode?: string
+          organization_id?: string
+          reason?: string
+          user_id?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_divisions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_divisions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_payouts: {
+        Row: {
+          amount: number
+          associate_id: string
+          created_at: string
+          division_id: string
+          id: string
+          idempotency_key: string
+          method: string
+          notes: string | null
+          organization_id: string
+          paid_at: string
+          payment_id: string | null
+          reference: string | null
+          user_id: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          amount: number
+          associate_id: string
+          created_at?: string
+          division_id: string
+          id?: string
+          idempotency_key: string
+          method: string
+          notes?: string | null
+          organization_id?: string
+          paid_at: string
+          payment_id?: string | null
+          reference?: string | null
+          user_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          amount?: number
+          associate_id?: string
+          created_at?: string
+          division_id?: string
+          id?: string
+          idempotency_key?: string
+          method?: string
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string
+          payment_id?: string | null
+          reference?: string | null
+          user_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_payouts_associate_id_fkey"
+            columns: ["associate_id"]
+            isOneToOne: false
+            referencedRelation: "associates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payouts_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "fee_divisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payouts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payouts_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_events: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          entity_id: string
+          id: string
+          organization_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details: Json
+          entity_id: string
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          entity_id?: string
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       installments: {
         Row: {
           amount: number
@@ -268,6 +481,8 @@ export type Database = {
           id: string
           label: string
           organization_id: string
+          original_amount: number | null
+          superseded: boolean
         }
         Insert: {
           amount: number
@@ -277,6 +492,8 @@ export type Database = {
           id?: string
           label: string
           organization_id?: string
+          original_amount?: number | null
+          superseded?: boolean
         }
         Update: {
           amount?: number
@@ -286,6 +503,8 @@ export type Database = {
           id?: string
           label?: string
           organization_id?: string
+          original_amount?: number | null
+          superseded?: boolean
         }
         Relationships: [
           {
@@ -307,10 +526,12 @@ export type Database = {
       legal_cases: {
         Row: {
           client_id: string
+          closed_at: string | null
           created_at: string
           deadline_note: string | null
           demo: boolean
           id: string
+          legal_area: string | null
           next_deadline: string | null
           notes: string | null
           number: string
@@ -321,10 +542,12 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          closed_at?: string | null
           created_at?: string
           deadline_note?: string | null
           demo?: boolean
           id?: string
+          legal_area?: string | null
           next_deadline?: string | null
           notes?: string | null
           number: string
@@ -335,10 +558,12 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          closed_at?: string | null
           created_at?: string
           deadline_note?: string | null
           demo?: boolean
           id?: string
+          legal_area?: string | null
           next_deadline?: string | null
           notes?: string | null
           number?: string
@@ -461,6 +686,9 @@ export type Database = {
           paid_at: string
           reference: string | null
           user_id: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           amount: number
@@ -475,6 +703,9 @@ export type Database = {
           paid_at: string
           reference?: string | null
           user_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           amount?: number
@@ -489,6 +720,9 @@ export type Database = {
           paid_at?: string
           reference?: string | null
           user_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -549,6 +783,28 @@ export type Database = {
       }
     }
     Views: {
+      payout_ledger: {
+        Row: {
+          amount: number | null
+          division_id: string | null
+          effective_date: string | null
+          event_id: string | null
+          organization_id: string | null
+        }
+        Relationships: []
+      }
+      receipt_ledger: {
+        Row: {
+          amount: number | null
+          effective_date: string | null
+          event_id: string | null
+          installment_id: string | null
+          kind: string | null
+          organization_id: string | null
+          payment_id: string | null
+        }
+        Relationships: []
+      }
       receivables: {
         Row: {
           amount: number | null
@@ -589,6 +845,21 @@ export type Database = {
         }
         Returns: string
       }
+      create_contract_review: {
+        Args: {
+          p_client: string
+          p_method: string
+          p_modality: string
+          p_notes: string
+          p_number: string
+          p_responsible: string
+          p_schedule: Json
+          p_signed: string
+          p_subject: string
+          p_total: number
+        }
+        Returns: string
+      }
       current_org: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -602,6 +873,20 @@ export type Database = {
       is_rtg_admin: { Args: never; Returns: boolean }
       my_access: { Args: never; Returns: Json }
       org_access_ok: { Args: { p_org: string }; Returns: boolean }
+      record_fee_payout: {
+        Args: {
+          p_amount: number
+          p_associate: string
+          p_date: string
+          p_division: string
+          p_key: string
+          p_method: string
+          p_notes?: string
+          p_payment?: string
+          p_reference?: string
+        }
+        Returns: string
+      }
       record_payment: {
         Args: {
           p_amount: number
@@ -612,6 +897,10 @@ export type Database = {
           p_notes?: string
           p_reference?: string
         }
+        Returns: string
+      }
+      remove_client: {
+        Args: { p_archive?: boolean; p_client: string }
         Returns: string
       }
       renegotiate_contract: {
@@ -634,8 +923,22 @@ export type Database = {
         }
         Returns: string
       }
+      save_fee_division: {
+        Args: {
+          p_allocations: Json
+          p_basis: string
+          p_contract: string
+          p_mode: string
+          p_reason: string
+        }
+        Returns: string
+      }
       set_member_status: {
         Args: { p_active: boolean; p_member: string; p_role: string }
+        Returns: undefined
+      }
+      void_financial_entry: {
+        Args: { p_id: string; p_kind: string; p_reason: string }
         Returns: undefined
       }
     }
