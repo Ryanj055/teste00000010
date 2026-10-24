@@ -30,13 +30,13 @@ try{
  const replacement=unwrap(await db.rpc('save_fee_division',{p_contract:contract,p_basis:'received',p_mode:'percent',p_allocations:[{associate_id:one,value:60},{associate_id:two,value:40}],p_reason:'New audited version'}));
  check('Previous payout remains counted across versions',Boolean((await db.rpc('record_fee_payout',{...payoutArgs,p_division:replacement,p_amount:1,p_key:crypto.randomUUID()})).error));
  check('Prior division is retained',unwrap(await db.from('fee_divisions').select('id').eq('contract_id',contract)).length===2);
- unwrap(await db.rpc('void_financial_entry',{p_id:payout,p_kind:'payout',p_reason:'Reverse payout test'}));
+ check('Payout reversal succeeds',!(await db.rpc('void_financial_entry',{p_id:payout,p_kind:'payout',p_reason:'Reverse payout test'})).error);
  unwrap(await db.rpc('renegotiate_contract',{p_contract:contract,p_schedule:[{label:'New 1',amount:300,due_date:date},{label:'New 2',amount:300,due_date:date}],p_reason:'Reconcile remaining balance'}));
  const after=unwrap(await db.from('receivables').select('amount,paid,balance').eq('contract_id',contract));const sum=(key:'amount'|'paid'|'balance')=>after.reduce((s,x)=>s+Math.round(Number(x[key])*100),0);
  check('Renegotiation preserves 1000 contracted, 400 paid, 600 open',sum('amount')===100000&&sum('paid')===40000&&sum('balance')===60000);
  check('Superseded installments are archived',unwrap(await db.from('installments').select('id').eq('contract_id',contract).eq('superseded',true)).length===1);
  check('Old schedule snapshot remains auditable',unwrap(await db.from('finance_events').select('id').eq('entity_id',contract).eq('action','Cronograma anterior')).length===1);
- unwrap(await db.rpc('void_financial_entry',{p_id:payment,p_kind:'payment',p_reason:'Correct receipt after renegotiation'}));
+ check('Receipt reversal after renegotiation succeeds',!(await db.rpc('void_financial_entry',{p_id:payment,p_kind:'payment',p_reason:'Correct receipt after renegotiation'})).error);
  check('Reversal reopens exactly 1000, not a new fee',unwrap(await db.from('receivables').select('balance').eq('contract_id',contract)).reduce((s,x)=>s+Math.round(Number(x.balance)*100),0)===100000);
  check('Receipt ledger reconciles reversal to zero',unwrap(await db.from('receipt_ledger').select('amount')).reduce((s,x)=>s+Math.round(Number(x.amount)*100),0)===0);
  check('Payout ledger reconciles reversal to zero',unwrap(await db.from('payout_ledger').select('amount')).reduce((s,x)=>s+Math.round(Number(x.amount)*100),0)===0);
