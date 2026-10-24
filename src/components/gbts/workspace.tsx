@@ -5,7 +5,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { LayoutDashboard, Users, FileText, Wallet, Receipt, Bell, Search, ChevronRight, Plus, ArrowUpRight, ArrowDownRight, Menu, LogOut, ShieldCheck, Scale, Settings, ChartNoAxesCombined, CircleHelp, CalendarDays, HandCoins, Download, Landmark, X, ArrowRight, ArrowDownLeft, CircleAlert, ChevronLeft, SlidersHorizontal, RefreshCw, Eye } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/gbts-logo.jpeg.asset.json';
+import logo from '@/assets/gbts-logo.png.asset.json';
 import { supabase } from '@/integrations/supabase/client';
 import { getWorkspace, getHistory, type WorkspaceData } from '@/lib/gbts/data.functions';
 import { getAccess } from '@/lib/gbts/admin.functions';
