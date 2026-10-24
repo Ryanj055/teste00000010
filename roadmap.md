@@ -15,13 +15,13 @@
 - [ ] Convites de Gabriella, Thais (administradoras) e definição do administrador RTG — aguardam e-mails.
 - [x] Publicação.
 ## Revisão e finalização solicitada em 23/10/2026
-- [ ] Cobranças: histórico, correções e estornos conciliados.
-- [ ] Honorários: associados, divisões, versões e repasses reais.
-- [ ] Processos: indicadores, gráficos, áreas, filtros e prazos reais.
-- [ ] Clientes: remoção segura ou arquivamento com confirmação.
-- [ ] Despesas: categoria personalizada e pesquisa.
-- [ ] Contratos: modalidades funcionais, pagamento previsto e datas identificadas.
-- [ ] Linguagem neutra, nome sem sigla e rodapé RTG com contatos.
-- [ ] Revisão móvel 360/390/430 px e computador.
-- [ ] Testes reais, documentação e relatório de pendências.
+- [x] Cobranças: histórico, correções e estornos conciliados.
+- [x] Honorários: associados, divisões, versões e repasses reais.
+- [x] Processos: indicadores, gráficos, áreas, filtros e prazos reais.
+- [x] Clientes: remoção segura ou arquivamento com confirmação.
+- [x] Despesas: categoria personalizada e pesquisa.
+- [x] Contratos: modalidades funcionais, pagamento previsto e datas identificadas.
+- [x] Linguagem neutra, nome sem sigla e rodapé RTG com contatos.
+- [x] Revisão móvel 360/390/430 px e computador.
+- [x] Testes reais, documentação e relatório de pendências (19 testes e 34 verificações isoladas); contas e registros temporários removidos.
 - [ ] Validação de restauração de backup e LGPD — exige processo operacional antes de dados reais.
