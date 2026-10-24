@@ -11,7 +11,7 @@
 - [x] Conferência visual das páginas privadas com conta temporária (computador e celular).
 - [x] Documento de finalização RTG: processos, relatórios, exportação CSV, importação de clientes com prévia, README e .env.example (banco atual mantido por decisão do usuário).
 - [x] Correção de escopo comercial: escritórios isolados, painel RTG, situação da assinatura, equipe por convite, renegociação, sessão expirada, página institucional.
-- [ ] Apagar dados fictícios do escritório GBTS — aguarda autorização.
+- [ ] Remover registros marcados como demonstração — autorizado na revisão dos indicadores de 24/10/2026.
 - [ ] Convites de Gabriella, Thais (administradoras) e definição do administrador RTG — aguardam e-mails.
 - [x] Publicação.
 ## Revisão e finalização solicitada em 23/10/2026
@@ -25,3 +25,7 @@
 - [x] Revisão móvel 360/390/430 px e computador.
 - [x] Testes reais, documentação e relatório de pendências (19 testes e 34 verificações isoladas); contas e registros temporários removidos.
 - [ ] Validação de restauração de backup e LGPD — exige processo operacional antes de dados reais.
+## Indicadores exclusivamente reais — 24/10/2026
+- [ ] Auditar gráficos e cards; excluir demonstrações das consultas e remover exemplos da interface.
+- [ ] Corrigir estados vazios, períodos e atualização automática dos indicadores.
+- [ ] Validar cálculos com testes e conferir as páginas privadas conectadas ao banco.

@@ -65,7 +65,7 @@ export function ReportsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const inside = (d?: string | null) => Boolean(d && d >= from && d <= to);
   const categories = [...new Set(data.expenses.map((x) => x.category))];
-  const payments = data.payments.filter((x) => inside(x.paid_at));
+  const payments = data.payments.filter((x) => !x.voided_at && inside(x.paid_at));
   const expenses = data.expenses.filter((x) => (!category || x.category === category) && inside(x.paid_at ?? x.due_date));
   const payouts = data.payoutLedger.filter(x=>inside(x.effective_date));const repassed=payouts.reduce((s,x)=>s+Number(x.amount),0);
   const ledger=data.ledger.filter(x=>inside(x.effective_date));
@@ -122,7 +122,7 @@ function ImportClients({ onClose }: { onClose: () => void }) {
   }
   return <Modal title="Importar clientes" onClose={onClose}><div className="modal-body">
     <div className="form-note">Envie um CSV com as colunas: nome; tipo (PF ou PJ); documento; email; telefone; endereco; responsavel; observacoes. Você revisa as linhas antes de confirmar.</div>
-    <Button variant="link" className="p-0 mb-4" onClick={() => download('modelo-clientes.csv', toCsv(['nome', 'tipo', 'documento', 'email', 'telefone', 'endereco', 'responsavel', 'observacoes'], [['Cliente Exemplo', 'PF', '', 'exemplo@email.com', '', '', 'Gabriella Barreto', '']]))}><Download size={14} />Baixar modelo</Button>
+    <Button variant="link" className="p-0 mb-4" onClick={() => download('modelo-clientes.csv', toCsv(['nome', 'tipo', 'documento', 'email', 'telefone', 'endereco', 'responsavel', 'observacoes'], []))}><Download size={14} />Baixar modelo</Button>
     <input type="file" accept=".csv,text/csv" aria-label="Arquivo CSV" onChange={(e) => read(e.target.files?.[0])} />
     {result && <div role="status" className="form-note mt-4">{result}</div>}
     {rows.length > 0 && <><p className="text-xs mt-4">{valid.length} válida(s) · {rows.length - valid.length} com erro</p><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>LINHA</th><th>NOME</th><th>TIPO</th><th>VALIDAÇÃO</th></tr></thead><tbody>
