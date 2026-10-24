@@ -50,6 +50,13 @@
       "when": 1792800388845,
       "tag": "0006_preserve_schedule_history_and_local_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792800506411,
+      "tag": "0007_allow_reconciled_reversals_and_fixed_payout_checks",
+      "breakpoints": true
     }
   ]
 }
