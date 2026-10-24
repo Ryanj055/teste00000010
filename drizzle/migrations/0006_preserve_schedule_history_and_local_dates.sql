@@ -1,0 +1,21 @@
+ALTER TABLE public.installments ADD COLUMN superseded boolean NOT NULL DEFAULT false, ADD COLUMN original_amount numeric(14,2);
+UPDATE public.installments SET original_amount=amount;
+CREATE OR REPLACE VIEW public.receivables WITH(security_invoker=true) AS SELECT i.id,i.contract_id,i.label,i.amount,i.due_date,i.demo,coalesce(p.paid,0)::numeric(14,2) paid,(i.amount-coalesce(p.paid,0))::numeric(14,2) balance,p.last_payment,CASE WHEN coalesce(p.paid,0)>=i.amount THEN 'Pago' WHEN i.due_date<(now() AT TIME ZONE 'America/Sao_Paulo')::date THEN 'Vencido' WHEN coalesce(p.paid,0)>0 THEN 'Parcialmente pago' ELSE 'A vencer' END status FROM public.installments i LEFT JOIN (SELECT installment_id,sum(amount) paid,max(paid_at) last_payment FROM public.payments WHERE voided_at IS NULL GROUP BY installment_id) p ON p.installment_id=i.id WHERE NOT i.superseded;
+CREATE OR REPLACE FUNCTION public.renegotiate_contract(p_contract uuid,p_schedule jsonb,p_reason text) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE v_org uuid:=public.current_org();v_open numeric;v_sum numeric;v_round int;BEGIN
+IF NOT public.can_access(v_org) THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF;
+PERFORM 1 FROM public.contracts WHERE id=p_contract AND organization_id=v_org FOR UPDATE;IF NOT FOUND THEN RAISE EXCEPTION 'Contrato não encontrado'; END IF;
+IF p_reason IS NULL OR length(trim(p_reason))<3 OR length(p_reason)>500 THEN RAISE EXCEPTION 'Informe o motivo da renegociação'; END IF;
+IF p_schedule IS NULL OR jsonb_typeof(p_schedule)<>'array' OR jsonb_array_length(p_schedule)<1 OR jsonb_array_length(p_schedule)>120 OR EXISTS(SELECT 1 FROM jsonb_array_elements(p_schedule)x WHERE (x->>'amount') IS NULL OR (x->>'amount')::numeric<=0 OR (x->>'amount')::numeric<>round((x->>'amount')::numeric,2) OR (x->>'due_date') IS NULL) THEN RAISE EXCEPTION 'Cronograma inválido'; END IF;
+SELECT coalesce(sum(i.amount-coalesce(p.paid,0)),0) INTO v_open FROM public.installments i LEFT JOIN (SELECT installment_id,sum(amount) paid FROM public.payments WHERE voided_at IS NULL GROUP BY installment_id)p ON p.installment_id=i.id WHERE i.contract_id=p_contract AND NOT i.superseded;
+SELECT sum((x->>'amount')::numeric) INTO v_sum FROM jsonb_array_elements(p_schedule)x;
+IF v_open<=0 OR v_sum<>v_open THEN RAISE EXCEPTION 'O cronograma deve totalizar o saldo em aberto (%)',v_open; END IF;
+INSERT INTO public.finance_events(organization_id,entity_id,action,details,user_id) SELECT v_org,p_contract,'Cronograma anterior',jsonb_build_object('installments',jsonb_agg(to_jsonb(i)),'reason',p_reason),auth.uid() FROM public.installments i WHERE i.contract_id=p_contract AND NOT i.superseded;
+UPDATE public.installments i SET superseded=true WHERE i.contract_id=p_contract AND NOT i.superseded AND NOT EXISTS(SELECT 1 FROM public.payments p WHERE p.installment_id=i.id AND p.voided_at IS NULL);
+UPDATE public.installments i SET amount=p.paid FROM (SELECT installment_id,sum(amount) paid FROM public.payments WHERE voided_at IS NULL GROUP BY installment_id)p WHERE p.installment_id=i.id AND i.contract_id=p_contract AND NOT i.superseded AND i.amount>p.paid;
+SELECT count(*)+1 INTO v_round FROM public.audit_log WHERE entity='renegotiation' AND entity_id=p_contract;
+INSERT INTO public.installments(contract_id,label,amount,original_amount,due_date,organization_id) SELECT p_contract,'Reneg. '||v_round||' · '||(x->>'label'),(x->>'amount')::numeric,(x->>'amount')::numeric,(x->>'due_date')::date,v_org FROM jsonb_array_elements(p_schedule)x;
+UPDATE public.contracts SET status='Ativo',notes=concat_ws(E'\n',notes,'Renegociação '||v_round||': '||p_reason) WHERE id=p_contract;
+INSERT INTO public.audit_log(entity,entity_id,action,user_id,organization_id) VALUES('renegotiation',p_contract,'UPDATE',auth.uid(),v_org);RETURN v_round;END $$;
+CREATE FUNCTION public.reject_superseded_payment() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN IF EXISTS(SELECT 1 FROM public.installments WHERE id=NEW.installment_id AND superseded) THEN RAISE EXCEPTION 'Parcela substituída por renegociação';END IF;RETURN NEW;END $$;
+REVOKE ALL ON FUNCTION public.reject_superseded_payment() FROM PUBLIC,anon;
+CREATE TRIGGER check_superseded BEFORE INSERT ON public.payments FOR EACH ROW EXECUTE FUNCTION public.reject_superseded_payment();

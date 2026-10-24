@@ -43,6 +43,13 @@
       "when": 1792799817270,
       "tag": "0005_finance_review_and_fee_sharing",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792800388845,
+      "tag": "0006_preserve_schedule_history_and_local_dates",
+      "breakpoints": true
     }
   ]
 }

@@ -481,6 +481,8 @@ export type Database = {
           id: string
           label: string
           organization_id: string
+          original_amount: number | null
+          superseded: boolean
         }
         Insert: {
           amount: number
@@ -490,6 +492,8 @@ export type Database = {
           id?: string
           label: string
           organization_id?: string
+          original_amount?: number | null
+          superseded?: boolean
         }
         Update: {
           amount?: number
@@ -499,6 +503,8 @@ export type Database = {
           id?: string
           label?: string
           organization_id?: string
+          original_amount?: number | null
+          superseded?: boolean
         }
         Relationships: [
           {
