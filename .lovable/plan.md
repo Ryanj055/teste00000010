@@ -109,11 +109,10 @@ A troca pode ser repetida a qualquer momento: no desenvolvimento, nos testes, na
 **Riscos:**
 - Bloqueio indevido de acesso. Mitigação: testes completos antes de publicar.
 - Período sem gestor de equipe até a designação.
-- Painel RTG inutilizável enquanto nenhuma conta RTG for cadastrada.
+- Gabriel deixará de ver os dados do escritório ao tornar-se RTG. Isso é intencional e reversível: basta reativar o vínculo.
 
-## Decisão necessária antes da execução
-- Qual e-mail será a conta legítima da RTG Systems? Pode ser existente ou nova.
-- A conta técnica de validação pode ser desativada, sem apagar registros?
+## Decisões pendentes
+Nenhuma. O plano está pronto para aprovação.
 
 ## Fora deste escopo
 A revisão dos indicadores reais segue pendente e separada (os registros de demonstração foram removidos e os gráficos mostram estado vazio; falta a conferência com uma conta conectada). Nada será retomado nem recriado aqui.
@@ -154,5 +153,8 @@ A revisão dos indicadores reais segue pendente e separada (os registros de demo
   - Componentes: `workspace.tsx`, `office-admin.tsx`, `office-modules.tsx` e `financial-review.tsx`.
   - Rotas: `src/routes/_authenticated/rtg.tsx`, `src/routes/auth.tsx` e `src/routes/__root.tsx`.
   - Os tipos são regenerados.
-- **Dados:** inserção única da conta RTG confirmada em `rtg_admins`, via ferramenta de dados.
+- **Dados (ferramenta de dados, uma vez):**
+  - inserir o `user_id` de gabrielcrf2003@gmail.com em `rtg_admins`;
+  - definir `active=false` nos vínculos de Gabriel e da conta técnica em `organization_members`;
+  - aplicar `is_general_admin=true` em Ryan pela mesma lógica de `rtg_set_general_admin`, com evento em `admin_events`. Nenhum desses dados fica no código.
 - **Testes:** novo script no padrão de `scripts/isolation-check.ts`, além de testes unitários das regras.
