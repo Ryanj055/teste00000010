@@ -1,125 +1,145 @@
-# Usuários e permissões: diagnóstico e plano revisado
+# Usuários e permissões: plano revisado
 
 ## Diagnóstico (conferido no sistema atual)
-- **Login:** e-mail e senha, recuperação e convite, sem cadastro público. As operações do servidor validam a sessão. Isso será mantido.
-- **Perfis atuais:** "administrador" e "usuário" do escritório, além do administrador RTG separado. Não há separação entre jurídico e financeiro.
-- **Proteções existentes:** isolamento entre escritórios, bloqueio por assinatura, RTG sem acesso aos dados dos escritórios, gestão de equipe restrita a administradores e impedimento de remover o próprio acesso. Tudo isso será preservado.
-- **Falha:** qualquer membro ativo lê e altera o financeiro. Ao abrir "Processos", o financeiro inteiro é carregado no navegador. Banco e operações financeiras verificam apenas se a pessoa pertence ao escritório.
-- **Contas atuais do escritório:** três contas com papel de administrador:
-  - ryanj021@hotmail.com
-  - gabrielcrf2003@gmail.com
-  - uma conta técnica de validação, gbts-validation-…@example.com, que deveria ter sido removida após os testes.
-  - Não há usuários comuns nem administrador RTG cadastrado.
-- **Como a aplicação distingue hoje os administradores:**
-  - RTG: lista própria de administradores da plataforma, separada dos escritórios. Dá acesso ao Painel RTG (escritórios, planos, assinaturas, histórico administrativo) e não dá acesso aos dados jurídicos e financeiros. Essa lista não pode ser alterada pelo aplicativo; hoje está **vazia** (nenhuma conta RTG designada).
-  - Escritório: papel "administrador" ou "usuário" na equipe do escritório, válido somente dentro daquele escritório. Um administrador de escritório não consegue entrar no Painel RTG, alterar assinaturas nem ver outros escritórios (conferido nas regras do banco).
+- **Login:** e-mail e senha, recuperação e convite, sem cadastro público. Todas as operações do servidor validam a sessão. Será mantido.
+- **Administração RTG:** usa uma lista própria de administradores da plataforma, separada dos escritórios. Dá acesso ao Painel RTG (escritórios, planos, assinaturas e histórico administrativo) e não dá acesso aos dados jurídicos e financeiros. O aplicativo não consegue alterar essa lista. Hoje ela está **vazia**: nenhuma conta RTG está designada.
+- **Administração do escritório:** o papel "administrador" ou "usuário" vale somente dentro do próprio escritório. Um administrador de escritório não acessa o Painel RTG, não altera assinaturas e não vê outros escritórios (conferido nas regras do banco).
+- **Falha atual:** todo membro ativo lê e altera o financeiro. Ao abrir "Processos", o financeiro inteiro também é carregado. O banco e as operações financeiras verificam apenas se a pessoa pertence ao escritório. Além disso, qualquer "administrador" de escritório consegue promover outros administradores.
+- **Contas do escritório atual:** três contas com papel de administrador, todas de teste:
+  - Ryan (ryanj021@hotmail.com);
+  - Gabriel (gabrielcrf2003@gmail.com);
+  - uma conta técnica de validação que sobrou dos testes.
+  Não há usuários comuns.
 
 ## Hierarquia
 ```text
-RTG Systems (plataforma)
+RTG Systems (plataforma, autenticada e autorizada)
   - escritórios, assinaturas, regras e limites das permissões
-  - designa o administrador geral de cada escritório
+  - ÚNICA que designa, substitui ou remove o administrador geral de cada escritório
   - sem acesso automático aos dados jurídicos e financeiros
      |
-Administrador geral do escritório (um escritório apenas)
-  - gerencia a própria equipe e concede jurídico e/ou financeiro
+Administrador geral do escritório (designado pela RTG)
+  - gerencia a equipe do próprio escritório: jurídico e/ou financeiro
+  - não designa nem transfere a administração geral
   - não altera as próprias permissões, assinaturas nem regras da plataforma
      |
 Usuários internos: jurídico, financeiro ou ambos
 ```
-- **Limites definidos pela RTG:** o catálogo de permissões (jurídico, financeiro e administrador geral) é fixo na plataforma; os escritórios não criam permissões novas nem ampliam as existentes. Nada concedido no escritório dá privilégio de RTG, e o escritório não consegue tornar ninguém administrador RTG.
-- **Proteção da conta RTG:** a migração não altera a lista RTG. A designação da conta RTG legítima é feita separadamente, somente com o e-mail que você confirmar, e testada antes da publicação.
 
 ## Modelo de permissões
-Três controles independentes por membro:
-- **Jurídico:** processos do próprio escritório e clientes. Permite cadastrar, consultar e editar os dados cadastrais.
-- **Financeiro:** contratos, parcelas, recebimentos, despesas, honorários, repasses, estornos, relatórios, exportações e histórico financeiros. Nos clientes, apenas os dados necessários, como nome e código, para identificar contratos.
-- **Administrador geral do escritório:** gerencia usuários e concede, altera ou revoga permissões **somente do próprio escritório**. É distinto do acesso aos módulos e é designado pela RTG ou pelo administrador geral existente.
+- **Jurídico:** processos do próprio escritório e clientes. Permite cadastrar, consultar e editar os dados cadastrais. Não há permissão por processo nesta versão.
+- **Financeiro:** contratos, parcelas, recebimentos, despesas, honorários, repasses, estornos, relatórios, exportações e histórico financeiros. Dos clientes, acessa apenas os dados de identificação.
+- **Administrador geral:** gerencia usuários e concede ou revoga jurídico e financeiro **no próprio escritório**. É uma designação separada do acesso aos módulos e não concede jurídico nem financeiro automaticamente.
+- O catálogo de permissões é fixo na plataforma; o escritório não cria nem amplia permissões.
+- Os novos usuários recebem jurídico por padrão, sem financeiro. O financeiro só é concedido explicitamente.
+- Ninguém altera as próprias permissões. Toda alteração fica no histórico. As revogações valem na operação seguinte, porque o banco confere a permissão a cada leitura e gravação.
 
-Regras:
-- Os usuários comuns, atuais e novos, recebem o acesso jurídico por padrão, sem o financeiro.
-- O financeiro só é concedido explicitamente pelo administrador geral.
-- Ninguém altera as próprias permissões, e o último administrador geral ativo não pode ser rebaixado nem desativado.
-- Os processos ficam liberados para todo o escritório nesta versão, sem permissão por processo.
-- A RTG continua sem acesso aos dados jurídicos e financeiros.
-- Toda alteração de permissão fica no histórico. Revogações valem na operação seguinte, porque o banco confere a permissão em cada leitura e gravação.
+## Designação e substituição pela RTG
+No Painel RTG, em cada escritório: **"Administrador geral"**, com a seleção de um membro ativo daquele escritório ou o convite de um e-mail novo já vinculado ao escritório.
 
-## Preservação dos dados e dos administradores atuais
+A operação, feita inteiramente no banco e numa única etapa:
+1. Confirma que quem executa é administrador RTG autenticado.
+2. Confirma que a conta de destino existe, está ativa e pertence ao escritório informado.
+3. Retira a designação do administrador anterior e a atribui ao novo, sem que o escritório fique sem administrador geral. O anterior mantém apenas os acessos de módulo que já tinha.
+4. Não altera o jurídico nem o financeiro de ninguém e não toca em processos, clientes, contratos, recebimentos, despesas ou históricos.
+5. Registra no histórico administrativo quem alterou, quando, de quem para quem e em qual escritório.
+
+A troca pode ser repetida a qualquer momento: no desenvolvimento, nos testes, na demonstração ou após a entrega. Nenhum e-mail fica fixo no código.
+
+**Bloqueios no banco e no servidor:**
+- Somente a RTG altera a designação; o escritório não consegue, nem por chamadas diretas.
+- O administrador do escritório não designa, transfere nem remove a função.
+- Nenhuma operação do escritório escreve na lista RTG.
+- Desativar ou remover o administrador geral só é possível depois que a RTG designar outro.
+- A RTG continua sem ler os dados jurídicos e financeiros.
+
+## Preservação na migração
 - Nenhum registro jurídico ou financeiro é apagado ou alterado.
-- Os atuais "administradores" mantêm, por ora, os acessos jurídico e financeiro, para não perderem nada. Porém **não** recebem automaticamente o poder de administrador geral.
-- O administrador geral será marcado somente na conta que você indicar (ver decisões). Até lá, a gestão de equipe fica sem titular. Por segurança, a execução só começa após essa indicação.
+- As três contas atuais mantêm o acesso jurídico e o financeiro que já têm, mas **nenhuma** vira administradora geral automaticamente. O antigo papel "administrador" deixa de dar poder de gestão.
+- Até a RTG designar alguém, a gestão de equipe do escritório fica sem titular. O restante continua funcionando.
+- A conta RTG legítima é cadastrada uma única vez, com o e-mail que você confirmar. Esse é o único passo manual; depois, todas as designações são feitas pelo painel.
 
 ## Etapas (pequenas, verificáveis e reversíveis)
-1. **Permissões no banco (aditivo).**
-   - Novos controles nos membros: jurídico, financeiro e administrador geral.
-   - Preenchimento: as contas atuais ficam com jurídico e financeiro; o administrador geral fica apenas na conta indicada.
-   - Funções de verificação e informações de acesso atualizadas.
-   - Nada é removido. A reversão consiste em ignorar os novos controles.
-2. **Regras de acesso do banco.**
-   - Cada regra ampla atual é substituída por uma equivalente que mantém o isolamento entre escritórios e o bloqueio por assinatura, acrescentando a permissão jurídica ou financeira.
-   - Os clientes ficam acessíveis a ambos. Para o financeiro, a tela usa apenas os campos de identificação; o cadastro não contém campos financeiros.
-   - As operações financeiras internas (contrato, recebimento, renegociação, divisão, repasse e estorno) passam a exigir o financeiro.
-   - A remoção de cliente exige o jurídico, e o arquivamento continua obrigatório quando houver vínculos.
-   - Risco: bloqueio indevido. Mitigação: testes completos antes da publicação.
-3. **Gestão de equipe e convites.**
-   - Somente o administrador geral convida, altera e revoga, com bloqueio de auto-alteração e proteção do último administrador geral.
-   - Os convites do escritório passam a definir o jurídico e o financeiro.
-   - O convite pelo painel RTG pode indicar o administrador geral de um escritório novo, mas sem que a RTG passe a ver os dados.
-4. **Servidor separado por domínio.**
-   - A carga atual é dividida em parte jurídica e parte financeira, cada uma entregue somente a quem tem a permissão.
-   - Relatórios, exportações e histórico verificam a permissão correspondente.
+1. **Banco: novos controles (aditivo).**
+   - Jurídico, financeiro e administrador geral em cada membro, com o histórico.
+   - A função de designação da RTG.
+   - Nada é removido; a reversão consiste em deixar de usar os novos controles.
+2. **Banco: regras de acesso.**
+   - Cada regra ampla é substituída por uma equivalente, mantendo o isolamento e o bloqueio por assinatura e acrescentando o jurídico ou o financeiro.
+   - As operações financeiras internas passam a exigir o financeiro; a remoção de cliente exige o jurídico.
+   - A gestão de membros passa a exigir o administrador geral.
+3. **Equipe, convites e Painel RTG.**
+   - A página da equipe ganha o controle de jurídico e financeiro, sem a opção de administrador.
+   - O Painel RTG ganha a designação e a substituição do administrador geral.
+4. **Servidor separado por domínio.** As partes jurídica e financeira são entregues somente a quem tem permissão, incluindo relatórios, exportações e histórico.
 5. **Interface.**
-   - Menu, busca, alertas, painel inicial e endereços digitados diretamente passam a respeitar as permissões.
+   - Menu, busca, alertas, painel inicial e endereços diretos passam a respeitar as permissões.
    - Quem não tem o financeiro entra por "Processos".
-   - O cache é descartado ao sair ou quando as permissões mudam.
-   - O visual permanece o mesmo.
-6. **Testes.**
-   - As 53 verificações existentes continuam passando.
-   - Novas verificações com contas temporárias, apagadas ao final:
-     - o jurídico não lê nem grava o financeiro, inclusive por acesso direto ao banco, às visões e às operações;
-     - o financeiro não gerencia usuários;
-     - não há autoconcessão de permissões;
-     - o último administrador geral fica protegido;
-     - a revogação vale imediatamente;
-     - o isolamento entre escritórios e o bloqueio da RTG se mantêm;
-     - o administrador do escritório não acessa o Painel RTG, não altera assinaturas, não gerencia outro escritório e não se torna RTG;
-     - a RTG continua gerenciando escritórios e designando o administrador geral, sem ler dados jurídicos ou financeiros.
-   - Conferência das telas no computador e no celular.
+   - O cache é limpo ao sair ou quando as permissões mudam.
+   - O visual não muda.
+6. **Testes**, com contas e escritórios temporários apagados ao final:
+   - as 53 verificações existentes;
+   - o jurídico não lê nem grava o financeiro, inclusive por acesso direto ao banco, às visões e às operações;
+   - o financeiro não gerencia usuários;
+   - não há autoconcessão de permissões;
+   - a revogação vale imediatamente;
+   - a RTG designa e depois substitui o administrador geral, o anterior perde a função e o histórico registra as duas trocas;
+   - a designação é rejeitada para conta de outro escritório, conta inativa ou inexistente;
+   - um administrador ou usuário de escritório que tente designar, transferir ou remover a função, ou se tornar RTG, por chamada direta, é bloqueado;
+   - o escritório nunca fica sem administrador geral após a designação;
+   - a RTG não lê dados jurídicos e financeiros;
+   - o isolamento entre escritórios e o bloqueio por assinatura se mantêm;
+   - as telas são conferidas no computador e no celular.
 
 **Estimativa:** complexidade média, em 6 entregas. As etapas 1 e 2 são as mais delicadas.
 
-## Decisões necessárias antes da execução
-- Qual conta será o administrador geral do escritório: ryanj021@hotmail.com, gabrielcrf2003@gmail.com ou outra a convidar?
-- Qual e-mail é a conta legítima da RTG Systems? Pode ser uma conta já existente ou uma nova.
-- A conta técnica de validação pode ser desativada (sem apagar nenhum registro)?
-- Quais contas devem manter o financeiro? Por padrão, as duas atuais o mantêm até você revisar.
+**Riscos:**
+- Bloqueio indevido de acesso. Mitigação: testes completos antes de publicar.
+- Período sem gestor de equipe até a designação.
+- Painel RTG inutilizável enquanto nenhuma conta RTG for cadastrada.
+
+## Decisão necessária antes da execução
+- Qual e-mail será a conta legítima da RTG Systems? Pode ser existente ou nova.
+- A conta técnica de validação pode ser desativada, sem apagar registros?
 
 ## Fora deste escopo
-A revisão dos indicadores reais permanece pendente e separada:
-- os registros de demonstração foram removidos;
-- os gráficos passaram a mostrar estado vazio;
-- falta conferir as telas com uma conta conectada.
-
-Nada nela será retomado nem recriado aqui.
+A revisão dos indicadores reais segue pendente e separada (os registros de demonstração foram removidos e os gráficos mostram estado vazio; falta a conferência com uma conta conectada). Nada será retomado nem recriado aqui.
 
 ## Detalhes técnicos
-- **Membros (`organization_members`):** `can_legal boolean default true`, `can_finance boolean default false`, `is_general_admin boolean default false`. Backfill: os membros existentes ficam com legal e finance verdadeiros e o general admin somente para a conta indicada. Gatilho para impedir a remoção do último general admin ativo.
-- **Funções:** novas funções definer `has_legal(org)`, `has_finance(org)` e `is_general_admin()`, todas compostas com `can_access`. `my_access` passa a retornar as três flags. `is_org_admin` é mantida por compatibilidade e deixa de autorizar a gestão.
+- **`organization_members`:**
+  - `can_legal boolean default true`;
+  - `can_finance boolean default false`;
+  - `is_general_admin boolean default false`;
+  - índice único parcial com um general admin ativo por organização.
+  - Backfill: os membros atuais recebem legal e finance verdadeiros e `is_general_admin` falso. A coluna `role` fica obsoleta (comentário DEPRECATED).
+- **Gatilho:**
+  - impede a alteração de `is_general_admin` fora da função RTG, com flag de sessão definida apenas dentro dela;
+  - impede desativar o general admin atual.
+- **Funções definer:**
+  - `has_legal(org)`, `has_finance(org)` e `is_general_admin()`, compostas com `can_access`;
+  - `my_access` retorna as flags;
+  - `is_org_admin` passa a significar general admin;
+  - `rtg_set_general_admin(p_org, p_member)` exige `is_rtg_admin`, valida membro ativo do mesmo `p_org`, troca a flag em uma transação e grava em `admin_events` (actor, de, para).
+- **`set_member_status` reformulada:** exige `is_general_admin`, mesmo escritório e alvo diferente de si mesmo; altera somente `active`/`can_legal`/`can_finance`; rejeita o alvo general admin para desativação.
 - **Políticas:**
-  - `legal_cases`: has_legal.
-  - `clients`: leitura com legal ou finance; escrita com legal.
-  - `contracts`, `installments`, `payments`, `expenses`, `associates`, `fee_divisions`, `fee_payouts` e `finance_events`: has_finance.
-  - `audit_log`: leitura filtrada por entidade (`legal_cases`/`clients` exigem legal; demais exigem finance).
-  - As visões `receivables`, `receipt_ledger` e `payout_ledger` já usam `security_invoker`.
+  - `legal_cases`: has_legal;
+  - `clients`: leitura com legal ou finance, escrita com legal;
+  - `contracts`, `installments`, `payments`, `expenses`, `associates`, `fee_divisions`, `fee_payouts` e `finance_events`: has_finance;
+  - `audit_log`: filtro por entidade;
+  - as visões já usam `security_invoker`;
+  - `rtg_admins`, `organizations` e `admin_events` permanecem inalteradas.
 - **RPCs:**
-  - Exigem has_finance: `create_contract`, `create_contract_review`, `record_payment`, `renegotiate_contract`, `save_fee_division`, `record_fee_payout` e `void_financial_entry`.
-  - Exige has_legal: `remove_client`.
-  - `set_member_status` recebe as flags, exige `is_general_admin` e bloqueia `p_member` do próprio usuário.
+  - has_finance: `create_contract`, `create_contract_review`, `record_payment`, `renegotiate_contract`, `save_fee_division`, `record_fee_payout` e `void_financial_entry`;
+  - has_legal: `remove_client`.
 - **Arquivos:**
+  - `src/lib/gbts/admin.functions.ts`:
+    - `inviteMember` permite que o general admin convide para o próprio escritório e a RTG para o escritório indicado, sem flag administrativa;
+    - nova função `designateGeneralAdmin`;
+    - `setMember` recebe as flags.
   - `src/lib/gbts/data.functions.ts`: `getLegalWorkspace` e `getFinanceWorkspace`.
-  - `src/lib/gbts/review.functions.ts` e `src/lib/gbts/admin.functions.ts`: flags, convite e verificação do general admin antes de usar o cliente administrativo.
-  - Telas: `src/components/gbts/workspace.tsx`, `office-admin.tsx`, `office-modules.tsx` e `financial-review.tsx`.
-  - Rotas: `src/routes/auth.tsx`, `src/routes/_authenticated/rtg.tsx` e `src/routes/__root.tsx`.
+  - `src/lib/gbts/review.functions.ts`.
+  - Componentes: `workspace.tsx`, `office-admin.tsx`, `office-modules.tsx` e `financial-review.tsx`.
+  - Rotas: `src/routes/_authenticated/rtg.tsx`, `src/routes/auth.tsx` e `src/routes/__root.tsx`.
   - Os tipos são regenerados.
-- **RTG:** `rtg_admins`, `is_rtg_admin`, `rtg_save_org` e as regras de `organizations`/`admin_events` permanecem inalterados. Nova função definer `rtg_set_general_admin(member)`, que exige `is_rtg_admin` e altera somente a flag de administrador geral; não concede jurídico/financeiro à RTG. Nenhuma operação de escritório escreve em `rtg_admins`. A conta RTG legítima é inserida como dado separado, após a confirmação do e-mail.
-- **Testes:** novo script no padrão de `scripts/isolation-check.ts`, além de testes unitários das regras de permissão.
+- **Dados:** inserção única da conta RTG confirmada em `rtg_admins`, via ferramenta de dados.
+- **Testes:** novo script no padrão de `scripts/isolation-check.ts`, além de testes unitários das regras.
