@@ -60,32 +60,35 @@ export function Renegotiate({ contractId, balance, onDone }: { contractId: strin
       {rows ? <Button disabled={busy} onClick={confirm}>{busy ? 'Salvando…' : 'Confirmar renegociação'}</Button> : <Button type="submit" form="reneg">Revisar cronograma</Button>}</div></Modal>}</>;
 }
 
+type Member = { id: string; email: string | null; active: boolean; can_legal: boolean; can_finance: boolean };
 export function TeamPage() {
   const qc = useQueryClient(); const list = useServerFn(listMembers), invite = useServerFn(inviteMember), update = useServerFn(setMember);
   const q = useQuery({ queryKey: ['members'], queryFn: () => list() });
-  const [busy, setBusy] = useState(false), [confirmOff, setConfirmOff] = useState<{ id: string; email: string | null; role: 'admin' | 'member' } | null>(null);
+  const [busy, setBusy] = useState(false), [confirmOff, setConfirmOff] = useState<Member | null>(null);
   async function send(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const form = e.currentTarget; const f = new FormData(form); setBusy(true);
-    try { await invite({ data: { email: String(f.get('email')), role: f.get('role') === 'admin' ? 'admin' : 'member', redirect: window.location.origin } }); toast.success('Convite enviado por e-mail.'); form.reset(); await qc.invalidateQueries({ queryKey: ['members'] }); }
+    try { await invite({ data: { email: String(f.get('email')), finance: f.get('finance') === 'on', redirect: window.location.origin } }); toast.success('Convite enviado por e-mail.'); form.reset(); await qc.invalidateQueries({ queryKey: ['members'] }); }
     catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível convidar.'); } finally { setBusy(false); }
   }
-  async function change(id: string, active: boolean, role: 'admin' | 'member') {
-    try { await update({ data: { id, active, role } }); toast.success('Acesso atualizado.'); await qc.invalidateQueries({ queryKey: ['members'] }); }
+  async function change(m: Member, next: Partial<Pick<Member, 'active' | 'can_legal' | 'can_finance'>>) {
+    const v = { ...m, ...next };
+    try { await update({ data: { id: m.id, active: v.active, legal: v.can_legal, finance: v.can_finance } }); toast.success('Acesso atualizado.'); await qc.invalidateQueries({ queryKey: ['members'] }); }
     catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar.'); }
   }
-  return <><div className="page-heading"><div><div className="eyebrow">ADMINISTRAÇÃO DO ESCRITÓRIO</div><h1>Equipe e acessos</h1><p>Convide, desative ou altere o papel da equipe do seu escritório.</p></div></div>
-    <section className="panel mb-6"><div className="table-heading"><div><h2>Convidar pessoa</h2><p>A pessoa recebe um e-mail para definir a própria senha</p></div></div>
+  return <><div className="page-heading"><div><div className="eyebrow">ADMINISTRAÇÃO DO ESCRITÓRIO</div><h1>Equipe e acessos</h1><p>Convide, desative e defina o acesso jurídico e financeiro da equipe do seu escritório.</p></div></div>
+    <section className="panel mb-6"><div className="table-heading"><div><h2>Convidar pessoa</h2><p>A pessoa recebe um e-mail para definir a própria senha. O acesso jurídico é concedido por padrão.</p></div></div>
       <form className="toolbar !m-0 p-5 flex-wrap" onSubmit={send}><input name="email" type="email" required maxLength={255} placeholder="E-mail da pessoa" aria-label="E-mail" className="!max-w-sm" />
-        <select name="role" aria-label="Papel" defaultValue="member"><option value="member">Usuário</option><option value="admin">Administrador</option></select><Button disabled={busy}><UserPlus />{busy ? 'Enviando…' : 'Enviar convite'}</Button></form></section>
+        <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="finance" />Conceder acesso financeiro</label><Button disabled={busy}><UserPlus />{busy ? 'Enviando…' : 'Enviar convite'}</Button></form></section>
     <section className="panel">{q.isLoading ? <div className="empty">Carregando equipe…</div> : q.error ? <div className="empty">{q.error.message}</div> :
-      <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>E-MAIL</th><th>PAPEL</th><th>SITUAÇÃO</th><th>DESDE</th><th /></tr></thead><tbody>
-        {q.data?.members.map((m) => { const self = m.user_id === q.data.me; const role = m.role === 'admin' ? 'admin' : 'member';
-          return <tr key={m.id}><td>{m.email}{self && <span className="cell-secondary block">Você</span>}</td>
-            <td><select aria-label={`Papel de ${m.email}`} disabled={self} value={role} onChange={(e) => change(m.id, m.active, e.target.value === 'admin' ? 'admin' : 'member')}><option value="member">Usuário</option><option value="admin">Administrador</option></select></td>
+      <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>E-MAIL</th><th>JURÍDICO</th><th>FINANCEIRO</th><th>SITUAÇÃO</th><th>DESDE</th><th /></tr></thead><tbody>
+        {q.data?.members.map((m) => { const self = m.user_id === q.data.me; const locked = self || m.is_general_admin;
+          return <tr key={m.id}><td>{m.email}{m.is_general_admin && <span className="cell-secondary block">Administrador geral (definido pela RTG)</span>}{self && <span className="cell-secondary block">Você</span>}</td>
+            <td><input type="checkbox" aria-label={`Acesso jurídico de ${m.email}`} disabled={locked} checked={m.can_legal} onChange={(e) => change(m, { can_legal: e.target.checked })} /></td>
+            <td><input type="checkbox" aria-label={`Acesso financeiro de ${m.email}`} disabled={locked} checked={m.can_finance} onChange={(e) => change(m, { can_finance: e.target.checked })} /></td>
             <td><span className={`badge ${m.active ? 'paid' : 'partial'}`}>{m.active ? 'Ativo' : 'Desativado'}</span></td><td>{dateLabel(m.created_at)}</td>
-            <td>{!self && (m.active ? <Button variant="outline" size="sm" onClick={() => setConfirmOff({ id: m.id, email: m.email, role })}>Desativar</Button> : <Button variant="outline" size="sm" onClick={() => change(m.id, true, role)}>Reativar</Button>)}</td></tr>; })}
+            <td>{!locked && (m.active ? <Button variant="outline" size="sm" onClick={() => setConfirmOff(m)}>Desativar</Button> : <Button variant="outline" size="sm" onClick={() => change(m, { active: true })}>Reativar</Button>)}</td></tr>; })}
       </tbody></table></div>}</section>
     {confirmOff && <Modal title="Desativar acesso" onClose={() => setConfirmOff(null)}><div className="modal-body"><p className="text-sm">{confirmOff.email} deixará de acessar o escritório. Os registros criados pela pessoa são preservados.</p></div>
-      <div className="modal-footer"><Button variant="outline" onClick={() => setConfirmOff(null)}>Cancelar</Button><Button variant="destructive" onClick={async () => { await change(confirmOff.id, false, confirmOff.role); setConfirmOff(null); }}>Desativar</Button></div></Modal>}
+      <div className="modal-footer"><Button variant="outline" onClick={() => setConfirmOff(null)}>Cancelar</Button><Button variant="destructive" onClick={async () => { await change(confirmOff, { active: false }); setConfirmOff(null); }}>Desativar</Button></div></Modal>}
   </>;
 }
