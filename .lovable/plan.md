@@ -10,12 +10,31 @@
   - gabrielcrf2003@gmail.com
   - uma conta técnica de validação, gbts-validation-…@example.com, que deveria ter sido removida após os testes.
   - Não há usuários comuns nem administrador RTG cadastrado.
+- **Como a aplicação distingue hoje os administradores:**
+  - RTG: lista própria de administradores da plataforma, separada dos escritórios. Dá acesso ao Painel RTG (escritórios, planos, assinaturas, histórico administrativo) e não dá acesso aos dados jurídicos e financeiros. Essa lista não pode ser alterada pelo aplicativo; hoje está **vazia** (nenhuma conta RTG designada).
+  - Escritório: papel "administrador" ou "usuário" na equipe do escritório, válido somente dentro daquele escritório. Um administrador de escritório não consegue entrar no Painel RTG, alterar assinaturas nem ver outros escritórios (conferido nas regras do banco).
+
+## Hierarquia
+```text
+RTG Systems (plataforma)
+  - escritórios, assinaturas, regras e limites das permissões
+  - designa o administrador geral de cada escritório
+  - sem acesso automático aos dados jurídicos e financeiros
+     |
+Administrador geral do escritório (um escritório apenas)
+  - gerencia a própria equipe e concede jurídico e/ou financeiro
+  - não altera as próprias permissões, assinaturas nem regras da plataforma
+     |
+Usuários internos: jurídico, financeiro ou ambos
+```
+- **Limites definidos pela RTG:** o catálogo de permissões (jurídico, financeiro e administrador geral) é fixo na plataforma; os escritórios não criam permissões novas nem ampliam as existentes. Nada concedido no escritório dá privilégio de RTG, e o escritório não consegue tornar ninguém administrador RTG.
+- **Proteção da conta RTG:** a migração não altera a lista RTG. A designação da conta RTG legítima é feita separadamente, somente com o e-mail que você confirmar, e testada antes da publicação.
 
 ## Modelo de permissões
 Três controles independentes por membro:
 - **Jurídico:** processos do próprio escritório e clientes. Permite cadastrar, consultar e editar os dados cadastrais.
 - **Financeiro:** contratos, parcelas, recebimentos, despesas, honorários, repasses, estornos, relatórios, exportações e histórico financeiros. Nos clientes, apenas os dados necessários, como nome e código, para identificar contratos.
-- **Administrador geral:** gerencia usuários e concede, altera ou revoga permissões. É distinto do acesso aos módulos.
+- **Administrador geral do escritório:** gerencia usuários e concede, altera ou revoga permissões **somente do próprio escritório**. É distinto do acesso aos módulos e é designado pela RTG ou pelo administrador geral existente.
 
 Regras:
 - Os usuários comuns, atuais e novos, recebem o acesso jurídico por padrão, sem o financeiro.
@@ -69,6 +88,7 @@ Regras:
 
 ## Decisões necessárias antes da execução
 - Qual conta será o administrador geral do escritório: ryanj021@hotmail.com, gabrielcrf2003@gmail.com ou outra a convidar?
+- Qual e-mail é a conta legítima da RTG Systems? Pode ser uma conta já existente ou uma nova.
 - A conta técnica de validação pode ser desativada (sem apagar nenhum registro)?
 - Quais contas devem manter o financeiro? Por padrão, as duas atuais o mantêm até você revisar.
 
