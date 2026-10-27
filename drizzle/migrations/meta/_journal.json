@@ -64,6 +64,13 @@
       "when": 1793063016458,
       "tag": "0008_domain_permissions_and_general_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793063151855,
+      "tag": "0009_allow_backend_cleanup_of_general_admin",
+      "breakpoints": true
     }
   ]
 }
