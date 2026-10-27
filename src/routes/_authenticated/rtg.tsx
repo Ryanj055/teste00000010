@@ -2,12 +2,12 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { Plus, Pencil, LogOut, UserPlus, ArrowLeft } from 'lucide-react';
+import { Plus, Pencil, LogOut, UserPlus, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { head, dateLabel } from '@/lib/gbts/finance';
-import { inviteMember, listOrganizations, orgStatuses, saveOrganization, type OrgStatus } from '@/lib/gbts/admin.functions';
+import { designateGeneralAdmin, inviteMember, listOrganizations, orgStatuses, saveOrganization, type OrgStatus } from '@/lib/gbts/admin.functions';
 import { Field, Modal } from '@/components/gbts/forms';
 import { statusLabel } from '@/components/gbts/office-admin';
 import { DeveloperSignature } from '@/components/gbts/developer-signature';
@@ -22,19 +22,19 @@ type Org = Awaited<ReturnType<typeof listOrganizations>>['organizations'][number
 function RtgPanel() {
   const fetcher = useServerFn(listOrganizations), qc = useQueryClient(), navigate = useNavigate();
   const q = useQuery({ queryKey: ['rtg'], queryFn: () => fetcher() });
-  const [edit, setEdit] = useState<Org | 'new' | null>(null), [inviteFor, setInviteFor] = useState<Org | null>(null);
+  const [edit, setEdit] = useState<Org | 'new' | null>(null), [inviteFor, setInviteFor] = useState<Org | null>(null), [adminFor, setAdminFor] = useState<Org | null>(null);
   async function logout() { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); await navigate({ to: '/auth', replace: true }); }
   return <div className="min-h-screen bg-background"><header className="topbar"><div><div className="eyebrow !m-0">RTG SYSTEMS</div><strong>Painel administrativo</strong></div>
     <div className="flex gap-2"><Button variant="ghost" size="sm" asChild><Link to="/dashboard"><ArrowLeft />Escritório</Link></Button><Button variant="ghost" size="icon" aria-label="Sair" onClick={logout}><LogOut size={17} /></Button></div></header>
     <main className="content">
       <div className="page-heading"><div><h1>Escritórios clientes</h1><p>Assinaturas, períodos de teste e situação de acesso. Este painel não exibe dados jurídicos nem financeiros dos escritórios.</p></div><Button onClick={() => setEdit('new')}><Plus />Novo escritório</Button></div>
       {q.isLoading ? <div className="empty">Carregando…</div> : q.error ? <div className="empty">{q.error.message}</div> : <>
-        <section className="panel mb-6"><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>ESCRITÓRIO</th><th>PLANO</th><th>SITUAÇÃO</th><th>INÍCIO</th><th>VENCIMENTO / TESTE</th><th>EQUIPE</th><th /></tr></thead><tbody>
+        <section className="panel mb-6"><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>ESCRITÓRIO</th><th>PLANO</th><th>SITUAÇÃO</th><th>INÍCIO</th><th>VENCIMENTO / TESTE</th><th>EQUIPE</th><th>ADMINISTRADOR GERAL</th><th /></tr></thead><tbody>
           {q.data?.organizations.map((o) => <tr key={o.id}><td><span className="cell-primary">{o.name}</span><span className="cell-secondary block">{o.contact_name} {o.contact_email}</span></td><td>{o.plan}</td>
             <td><span className={`badge ${o.status === 'active' ? 'paid' : o.status === 'suspended' || o.status === 'closed' ? 'overdue' : 'partial'}`}>{statusLabel(o.status)}</span></td>
             <td>{dateLabel(o.starts_at)}</td><td>{o.status === 'trial' ? dateLabel(o.trial_ends_at) : dateLabel(o.ends_at)}</td>
-            <td>{q.data.members.filter((m) => m.organization_id === o.id && m.active).length}</td>
-            <td className="whitespace-nowrap"><Button variant="ghost" size="icon" aria-label={`Editar ${o.name}`} onClick={() => setEdit(o)}><Pencil size={15} /></Button><Button variant="ghost" size="icon" aria-label={`Convidar para ${o.name}`} onClick={() => setInviteFor(o)}><UserPlus size={15} /></Button></td></tr>)}
+            <td>{q.data.members.filter((m) => m.organization_id === o.id && m.active).length}</td><td>{q.data.members.find((m) => m.organization_id === o.id && m.active && m.is_general_admin)?.email ?? <span className="text-muted-foreground">Não designado</span>}</td>
+            <td className="whitespace-nowrap"><Button variant="ghost" size="icon" aria-label={`Editar ${o.name}`} onClick={() => setEdit(o)}><Pencil size={15} /></Button><Button variant="ghost" size="icon" aria-label={`Convidar para ${o.name}`} onClick={() => setInviteFor(o)}><UserPlus size={15} /></Button><Button variant="ghost" size="icon" aria-label={`Administrador geral de ${o.name}`} title="Designar administrador geral" onClick={() => setAdminFor(o)}><ShieldCheck size={15} /></Button></td></tr>)}
         </tbody></table></div></section>
         <section className="panel"><div className="table-heading"><div><h2>Histórico administrativo</h2><p>Últimas 100 alterações</p></div></div>
           {q.data?.events.length ? q.data.events.map((e) => <div className="timeline-item px-5" key={e.id}><div><strong>{e.action}</strong> · {q.data.organizations.find((o) => o.id === e.organization_id)?.name}<small>{new Date(e.created_at).toLocaleString('pt-BR')} · {e.details ? JSON.stringify(e.details) : ''}</small></div></div>) : <div className="empty">Sem alterações registradas.</div>}</section>
@@ -43,6 +43,7 @@ function RtgPanel() {
     </main>
     {edit && <OrgForm org={edit === 'new' ? null : edit} onClose={() => setEdit(null)} />}
     {inviteFor && <InviteForm org={inviteFor} onClose={() => setInviteFor(null)} />}
+    {adminFor && q.data && <AdminForm org={adminFor} members={q.data.members.filter((m) => m.organization_id === adminFor.id && m.active)} onClose={() => setAdminFor(null)} />}
   </div>;
 }
 
@@ -74,12 +75,28 @@ function InviteForm({ org, onClose }: { org: Org; onClose: () => void }) {
   const invite = useServerFn(inviteMember), qc = useQueryClient(); const [busy, setBusy] = useState(false), [error, setError] = useState('');
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const f = new FormData(e.currentTarget); setBusy(true); setError('');
-    try { await invite({ data: { email: String(f.get('email')), role: f.get('role') === 'member' ? 'member' : 'admin', organization_id: org.id, redirect: window.location.origin } }); toast.success('Convite enviado.'); await qc.invalidateQueries({ queryKey: ['rtg'] }); onClose(); }
+    try { await invite({ data: { email: String(f.get('email')), finance: f.get('finance') === 'on', organization_id: org.id, redirect: window.location.origin } }); toast.success('Convite enviado.'); await qc.invalidateQueries({ queryKey: ['rtg'] }); onClose(); }
     catch (err) { setError(err instanceof Error ? err.message : 'Não foi possível convidar.'); } finally { setBusy(false); }
   }
   return <Modal title={`Convidar para ${org.name}`} onClose={onClose}><form onSubmit={submit}><div className="modal-body"><div className="form-grid">
     <Field label="E-mail"><input name="email" type="email" required maxLength={255} /></Field>
-    <Field label="Papel"><select name="role" defaultValue="admin"><option value="admin">Administrador do escritório</option><option value="member">Usuário</option></select></Field>
-  </div>{error && <div className="form-error" role="alert">{error}</div>}</div>
+    <Field label="Acessos"><label className="flex items-center gap-2 text-xs"><input type="checkbox" name="finance" />Conceder também o acesso financeiro</label></Field>
+  </div><div className="form-note mt-4">O acesso jurídico é concedido por padrão. Para tornar a pessoa administradora geral, convide e depois use a designação.</div>{error && <div className="form-error" role="alert">{error}</div>}</div>
   <div className="modal-footer"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button disabled={busy}>{busy ? 'Enviando…' : 'Enviar convite'}</Button></div></form></Modal>;
+}
+
+type RtgMember = Awaited<ReturnType<typeof listOrganizations>>['members'][number];
+function AdminForm({ org, members, onClose }: { org: Org; members: RtgMember[]; onClose: () => void }) {
+  const designate = useServerFn(designateGeneralAdmin), qc = useQueryClient(); const current = members.find((m) => m.is_general_admin);
+  const [member, setMember] = useState(current?.id ?? ''), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault(); if (!member) return; setBusy(true); setError('');
+    try { await designate({ data: { organization_id: org.id, member_id: member } }); toast.success('Administrador geral designado.'); await qc.invalidateQueries({ queryKey: ['rtg'] }); onClose(); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Não foi possível designar.'); } finally { setBusy(false); }
+  }
+  return <Modal title={`Administrador geral · ${org.name}`} onClose={onClose}><form onSubmit={submit}><div className="modal-body">
+    <div className="form-note">Atual: <strong>{current?.email ?? 'não designado'}</strong>. A troca retira a função do administrador anterior, não altera os acessos jurídico e financeiro e fica registrada no histórico.</div>
+    {members.length ? <Field label="Conta ativa do escritório"><select value={member} onChange={(e) => setMember(e.target.value)} required><option value="" disabled>Selecione</option>{members.map((m) => <option key={m.id} value={m.id}>{m.email}</option>)}</select></Field> : <div className="empty">Nenhuma conta ativa. Convide uma pessoa primeiro.</div>}
+    {error && <div className="form-error" role="alert">{error}</div>}</div>
+  <div className="modal-footer"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button disabled={busy || !member || member === current?.id}>{busy ? 'Salvando…' : 'Designar'}</Button></div></form></Modal>;
 }
