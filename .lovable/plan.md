@@ -81,7 +81,9 @@ Regras:
      - não há autoconcessão de permissões;
      - o último administrador geral fica protegido;
      - a revogação vale imediatamente;
-     - o isolamento entre escritórios e o bloqueio da RTG se mantêm.
+     - o isolamento entre escritórios e o bloqueio da RTG se mantêm;
+     - o administrador do escritório não acessa o Painel RTG, não altera assinaturas, não gerencia outro escritório e não se torna RTG;
+     - a RTG continua gerenciando escritórios e designando o administrador geral, sem ler dados jurídicos ou financeiros.
    - Conferência das telas no computador e no celular.
 
 **Estimativa:** complexidade média, em 6 entregas. As etapas 1 e 2 são as mais delicadas.
@@ -119,4 +121,5 @@ Nada nela será retomado nem recriado aqui.
   - Telas: `src/components/gbts/workspace.tsx`, `office-admin.tsx`, `office-modules.tsx` e `financial-review.tsx`.
   - Rotas: `src/routes/auth.tsx`, `src/routes/_authenticated/rtg.tsx` e `src/routes/__root.tsx`.
   - Os tipos são regenerados.
+- **RTG:** `rtg_admins`, `is_rtg_admin`, `rtg_save_org` e as regras de `organizations`/`admin_events` permanecem inalterados. Nova função definer `rtg_set_general_admin(member)`, que exige `is_rtg_admin` e altera somente a flag de administrador geral; não concede jurídico/financeiro à RTG. Nenhuma operação de escritório escreve em `rtg_admins`. A conta RTG legítima é inserida como dado separado, após a confirmação do e-mail.
 - **Testes:** novo script no padrão de `scripts/isolation-check.ts`, além de testes unitários das regras de permissão.
