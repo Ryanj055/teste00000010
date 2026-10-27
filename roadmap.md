@@ -11,7 +11,7 @@
 - [x] Conferência visual das páginas privadas com conta temporária (computador e celular).
 - [x] Documento de finalização RTG: processos, relatórios, exportação CSV, importação de clientes com prévia, README e .env.example (banco atual mantido por decisão do usuário).
 - [x] Correção de escopo comercial: escritórios isolados, painel RTG, situação da assinatura, equipe por convite, renegociação, sessão expirada, página institucional.
-- [ ] Remover registros marcados como demonstração — autorizado na revisão dos indicadores de 24/10/2026.
+- [x] Remover registros marcados como demonstração — autorizado na revisão dos indicadores de 24/10/2026.
 - [ ] Convites de Gabriella, Thais (administradoras) e definição do administrador RTG — aguardam e-mails.
 - [x] Publicação.
 ## Revisão e finalização solicitada em 23/10/2026
@@ -26,6 +26,10 @@
 - [x] Testes reais, documentação e relatório de pendências (19 testes e 34 verificações isoladas); contas e registros temporários removidos.
 - [ ] Validação de restauração de backup e LGPD — exige processo operacional antes de dados reais.
 ## Indicadores exclusivamente reais — 24/10/2026
-- [ ] Auditar gráficos e cards; excluir demonstrações das consultas e remover exemplos da interface.
-- [ ] Corrigir estados vazios, períodos e atualização automática dos indicadores.
-- [ ] Validar cálculos com testes e conferir as páginas privadas conectadas ao banco.
+- [x] Auditar gráficos e cards; remover demonstrações e exemplos da interface.
+- [x] Corrigir estados vazios, períodos e atualização automática dos indicadores.
+- [ ] Conferir as telas de indicadores com uma conta conectada — pausado a pedido; tratar separadamente.## Usuários e permissões — 27/10/2026
+- [x] Permissões jurídica e financeira no banco, no servidor e na interface.
+- [x] Administrador geral designado somente pela RTG pelo Painel RTG; Gabriel como RTG e Ryan como administrador geral de teste.
+- [x] Verificações de segurança (51 novas + 22 de isolamento + 34 financeiras) e testes automáticos.
+- [ ] Publicar a nova versão — aguarda sua decisão (o site publicado ainda usa as telas antigas de equipe).

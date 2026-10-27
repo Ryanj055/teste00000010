@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.guard_member_delete() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+BEGIN IF auth.uid() IS NOT NULL AND OLD.is_general_admin AND OLD.active THEN RAISE EXCEPTION 'Designe outro administrador geral antes de remover esta conta'; END IF; RETURN OLD; END $$;
+REVOKE ALL ON FUNCTION public.guard_member_delete() FROM PUBLIC, anon, authenticated;

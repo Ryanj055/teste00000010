@@ -119,7 +119,7 @@ function RootComponent() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(event => {
       if (!['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) return;
       router.invalidate();
-      if (event !== 'SIGNED_OUT') queryClient.invalidateQueries();
+      if (event === 'SIGNED_OUT') queryClient.clear(); else queryClient.invalidateQueries();
     });
     return () => subscription.unsubscribe();
   }, [router, queryClient]);

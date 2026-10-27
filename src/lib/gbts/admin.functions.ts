@@ -6,7 +6,7 @@ export const orgStatuses = ['setup', 'trial', 'active', 'payment_pending', 'susp
 export type OrgStatus = (typeof orgStatuses)[number];
 export type Access = {
   rtg: boolean;
-  organization: { id: string; name: string; status: OrgStatus; role: 'admin' | 'member'; access: boolean; ends_at: string | null } | null;
+  organization: { id: string; name: string; status: OrgStatus; role: 'admin' | 'member'; general_admin: boolean; can_legal: boolean; can_finance: boolean; access: boolean; ends_at: string | null } | null;
 };
 
 /** Situação de acesso calculada no banco com a data do servidor. */
@@ -35,7 +35,7 @@ export const listOrganizations = createServerFn({ method: 'GET' }).middleware([r
   if (!rtg) throw new Error('Acesso restrito à administração RTG.');
   const [orgs, members, events] = await Promise.all([
     context.supabase.from('organizations').select('*').order('name'),
-    context.supabase.from('organization_members').select('id,organization_id,email,role,active'),
+    context.supabase.from('organization_members').select('id,organization_id,email,active,is_general_admin'),
     context.supabase.from('admin_events').select('*').order('created_at', { ascending: false }).limit(100),
   ]);
   if (orgs.error || members.error || events.error) throw new Error('Não foi possível consultar os escritórios.');
@@ -52,27 +52,36 @@ export const saveOrganization = createServerFn({ method: 'POST' }).middleware([r
 });
 
 export const listMembers = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  const { data, error } = await context.supabase.from('organization_members').select('id,email,role,active,created_at,user_id').order('created_at');
+  const { data, error } = await context.supabase.from('organization_members').select('id,email,active,created_at,user_id,can_legal,can_finance,is_general_admin').order('created_at');
   if (error) throw new Error('Não foi possível consultar a equipe.');
   return { members: data, me: context.userId };
 });
 
 export const setMember = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), active: z.boolean(), role: z.enum(['admin', 'member']) }).parse(i))
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), active: z.boolean(), legal: z.boolean(), finance: z.boolean() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.rpc('set_member_status', { p_member: data.id, p_active: data.active, p_role: data.role });
+    const { error } = await context.supabase.rpc('set_member_access', { p_member: data.id, p_active: data.active, p_legal: data.legal, p_finance: data.finance });
     if (error) throw new Error(error.message);
     return true;
   });
 
-/** Convite por e-mail. Administradora convida para o próprio escritório; RTG pode indicar o escritório. */
+/** Somente a RTG designa ou substitui o administrador geral de um escritório. */
+export const designateGeneralAdmin = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ organization_id: z.string().uuid(), member_id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc('rtg_set_general_admin', { p_org: data.organization_id, p_member: data.member_id });
+    if (error) throw new Error(error.message);
+    return true;
+  });
+
+/** Convite por e-mail. O administrador geral convida para o próprio escritório; a RTG indica o escritório. Ninguém é convidado como administrador geral. */
 export const inviteMember = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ email: z.string().trim().toLowerCase().email().max(255), role: z.enum(['admin', 'member']), organization_id: z.string().uuid().optional(), redirect: z.string().url() }).parse(i))
+  .inputValidator((i: unknown) => z.object({ email: z.string().trim().toLowerCase().email().max(255), finance: z.boolean().default(false), organization_id: z.string().uuid().optional(), redirect: z.string().url() }).parse(i))
   .handler(async ({ data, context }) => {
     const [{ data: rtg }, { data: isAdmin }, { data: own }] = await Promise.all([
-      context.supabase.rpc('is_rtg_admin'), context.supabase.rpc('is_org_admin'), context.supabase.rpc('current_org'),
+      context.supabase.rpc('is_rtg_admin'), context.supabase.rpc('is_general_admin'), context.supabase.rpc('current_org'),
     ]);
-    const org = rtg && data.organization_id ? data.organization_id : isAdmin ? (own as string | null) : null;
+    const org = rtg && data.organization_id ? data.organization_id : isAdmin && !data.organization_id ? (own as string | null) : null;
     if (!org) throw new Error('Você não tem permissão para convidar pessoas.');
     const redirect = new URL(data.redirect);
     redirect.pathname = '/reset-password';
@@ -81,8 +90,8 @@ export const inviteMember = createServerFn({ method: 'POST' }).middleware([requi
     if (existing.data) throw new Error('Este e-mail já está vinculado a um escritório.');
     const invited = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, { redirectTo: redirect.toString() });
     if (invited.error || !invited.data.user) throw new Error('Não foi possível enviar o convite. Verifique se o e-mail já possui conta.');
-    const inserted = await supabaseAdmin.from('organization_members').insert({ organization_id: org, user_id: invited.data.user.id, email: data.email, role: data.role });
+    const inserted = await supabaseAdmin.from('organization_members').insert({ organization_id: org, user_id: invited.data.user.id, email: data.email, role: 'member', can_legal: true, can_finance: data.finance });
     if (inserted.error) throw new Error('Convite enviado, mas não foi possível vincular a pessoa. Contate o suporte.');
-    await supabaseAdmin.from('admin_events').insert({ organization_id: org, actor: context.userId, action: 'Pessoa convidada', details: { email: data.email, papel: data.role } });
+    await supabaseAdmin.from('admin_events').insert({ organization_id: org, actor: context.userId, action: 'Pessoa convidada', details: { email: data.email, juridico: true, financeiro: data.finance } });
     return true;
   });

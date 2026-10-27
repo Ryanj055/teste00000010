@@ -592,27 +592,36 @@ export type Database = {
       organization_members: {
         Row: {
           active: boolean
+          can_finance: boolean
+          can_legal: boolean
           created_at: string
           email: string | null
           id: string
+          is_general_admin: boolean
           organization_id: string
           role: string
           user_id: string
         }
         Insert: {
           active?: boolean
+          can_finance?: boolean
+          can_legal?: boolean
           created_at?: string
           email?: string | null
           id?: string
+          is_general_admin?: boolean
           organization_id: string
           role?: string
           user_id: string
         }
         Update: {
           active?: boolean
+          can_finance?: boolean
+          can_legal?: boolean
           created_at?: string
           email?: string | null
           id?: string
+          is_general_admin?: boolean
           organization_id?: string
           role?: string
           user_id?: string
@@ -861,6 +870,8 @@ export type Database = {
         Returns: string
       }
       current_org: { Args: never; Returns: string }
+      has_finance: { Args: { p_org: string }; Returns: boolean }
+      has_legal: { Args: { p_org: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -868,6 +879,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_general_admin: { Args: never; Returns: boolean }
       is_org_admin: { Args: never; Returns: boolean }
       is_partner: { Args: never; Returns: boolean }
       is_rtg_admin: { Args: never; Returns: boolean }
@@ -923,6 +935,10 @@ export type Database = {
         }
         Returns: string
       }
+      rtg_set_general_admin: {
+        Args: { p_member: string; p_org: string }
+        Returns: undefined
+      }
       save_fee_division: {
         Args: {
           p_allocations: Json
@@ -932,6 +948,15 @@ export type Database = {
           p_reason: string
         }
         Returns: string
+      }
+      set_member_access: {
+        Args: {
+          p_active: boolean
+          p_finance: boolean
+          p_legal: boolean
+          p_member: string
+        }
+        Returns: undefined
       }
       set_member_status: {
         Args: { p_active: boolean; p_member: string; p_role: string }
