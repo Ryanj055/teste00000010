@@ -7,7 +7,7 @@ const admin=createClient(url,srk,{auth:{persistSession:false},global:shim(srk)})
 const pw='T'+crypto.randomUUID()+'!a';const ids:string[]=[];const orgs:string[]=[];const out:string[]=[];let failed=0;
 const ok=(name:string,cond:boolean)=>{if(!cond)failed++;out.push(`${cond?'PASSOU':'FALHOU'} · ${name}`);};
 async function user(tag:string){const email=`perm-${tag}-${Date.now()}@example.com`;const {data,error}=await admin.auth.admin.createUser({email,password:pw,email_confirm:true});if(error)throw error;ids.push(data.user.id);const c=createClient(url,pub,{auth:{persistSession:false},global:shim(pub)});const s=await c.auth.signInWithPassword({email,password:pw});if(s.error)throw s.error;return {id:data.user.id,email,c};}
-const today=new Date().toISOString().slice(0,10);
+const today=new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'});
 const rows=async(q:PromiseLike<{data:unknown[]|null}>)=>((await q).data??[]).length;
 try{
  const oa=(await admin.from('organizations').insert({name:'Permissões A',status:'active'}).select('id').single()).data!.id;orgs.push(oa);
