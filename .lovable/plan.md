@@ -53,11 +53,24 @@ A troca pode ser repetida a qualquer momento: no desenvolvimento, nos testes, na
 - Desativar ou remover o administrador geral só é possível depois que a RTG designar outro.
 - A RTG continua sem ler os dados jurídicos e financeiros.
 
+## Contas definidas
+- **Gabriel (gabrielcrf2003@gmail.com): administrador da plataforma RTG.**
+  - Hoje ele também é membro administrador do escritório, o que lhe dá acesso aos dados jurídicos e financeiros.
+  - Para cumprir a regra "RTG sem acesso automático", esse vínculo com o escritório será **desativado**, e não apagado. Os registros criados por ele continuam preservados.
+  - Ele passa a usar apenas o Painel RTG.
+- **Ryan (ryanj021@hotmail.com): administrador geral de teste do escritório.**
+  - A designação inicial será feita pela própria função de designação da RTG, executada uma única vez em nome da RTG, com registro no histórico. Depois disso, as trocas serão feitas somente pelo Painel RTG.
+  - Ele mantém os acessos jurídico e financeiro que já tem, gerencia a equipe e as permissões, mas não altera a própria designação nem acessa o Painel RTG.
+- **Conta técnica de validação:** desativada, sem apagar registros.
+- Nenhum e-mail fica fixo no código. As substituições futuras não exigem código nem novas migrações.
+
 ## Preservação na migração
 - Nenhum registro jurídico ou financeiro é apagado ou alterado.
-- As três contas atuais mantêm o acesso jurídico e o financeiro que já têm, mas **nenhuma** vira administradora geral automaticamente. O antigo papel "administrador" deixa de dar poder de gestão.
-- Até a RTG designar alguém, a gestão de equipe do escritório fica sem titular. O restante continua funcionando.
-- A conta RTG legítima é cadastrada uma única vez, com o e-mail que você confirmar. Esse é o único passo manual; depois, todas as designações são feitas pelo painel.
+- O antigo papel "administrador" deixa de dar poder de gestão; somente a designação feita pela RTG vale.
+- Passos únicos de dados, feitos após as mudanças estruturais:
+  - incluir Gabriel na lista RTG;
+  - desativar os vínculos de Gabriel e da conta técnica com o escritório;
+  - designar Ryan.
 
 ## Etapas (pequenas, verificáveis e reversíveis)
 1. **Banco: novos controles (aditivo).**
