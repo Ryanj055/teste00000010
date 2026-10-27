@@ -57,6 +57,13 @@
       "when": 1792800506411,
       "tag": "0007_allow_reconciled_reversals_and_fixed_payout_checks",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793063016458,
+      "tag": "0008_domain_permissions_and_general_admin",
+      "breakpoints": true
     }
   ]
 }
