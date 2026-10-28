@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowRight, ShieldCheck, Wallet, Scale, ChartNoAxesCombined } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/gbts-logo.png.asset.json';
+const logo = { url: '/gbts-logo.png' };
 import { head } from '@/lib/gbts/finance';
 import { DeveloperSignature } from '@/components/gbts/developer-signature';
 

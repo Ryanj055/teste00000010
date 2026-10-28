@@ -6,7 +6,7 @@ import { LockKeyhole, LogOut, UserPlus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import logo from '@/assets/gbts-logo.png.asset.json';
+const logo = { url: '/gbts-logo.png' };
 import { inviteMember, listMembers, setMember, type OrgStatus } from '@/lib/gbts/admin.functions';
 import { renegotiate } from '@/lib/gbts/data.functions';
 import { dateLabel, money, schedule, today, type Schedule } from '@/lib/gbts/finance';
