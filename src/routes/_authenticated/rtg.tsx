@@ -75,7 +75,7 @@ function InviteForm({ org, onClose }: { org: Org; onClose: () => void }) {
   const invite = useServerFn(inviteMember), qc = useQueryClient(); const [busy, setBusy] = useState(false), [error, setError] = useState('');
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const f = new FormData(e.currentTarget); setBusy(true); setError('');
-    try { await invite({ data: { email: String(f.get('email')), finance: f.get('finance') === 'on', organization_id: org.id, redirect: window.location.origin } }); toast.success('Convite enviado.'); await qc.invalidateQueries({ queryKey: ['rtg'] }); onClose(); }
+    try { await invite({ data: { name: String(f.get('name') || f.get('email')), email: String(f.get('email')), finance: f.get('finance') === 'on', organization_id: org.id, redirect: window.location.origin } }); toast.success('Convite enviado.'); await qc.invalidateQueries({ queryKey: ['rtg'] }); onClose(); }
     catch (err) { setError(err instanceof Error ? err.message : 'Não foi possível convidar.'); } finally { setBusy(false); }
   }
   return <Modal title={`Convidar para ${org.name}`} onClose={onClose}><form onSubmit={submit}><div className="modal-body"><div className="form-grid">

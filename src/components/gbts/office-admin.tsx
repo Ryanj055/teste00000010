@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 const logo = { url: '/gbts-logo.png' };
-import { inviteMember, listMembers, setMember, type OrgStatus } from '@/lib/gbts/admin.functions';
+import { inviteMember, listMembers, removeMember, setMember, type OrgStatus } from '@/lib/gbts/admin.functions';
 import { renegotiate } from '@/lib/gbts/data.functions';
 import { dateLabel, money, schedule, today, type Schedule } from '@/lib/gbts/finance';
 import { Field, Modal } from './forms';
@@ -60,7 +60,7 @@ export function Renegotiate({ contractId, balance, onDone }: { contractId: strin
       {rows ? <Button disabled={busy} onClick={confirm}>{busy ? 'Salvando…' : 'Confirmar renegociação'}</Button> : <Button type="submit" form="reneg">Revisar cronograma</Button>}</div></Modal>}</>;
 }
 
-type Member = { id: string; email: string | null; active: boolean; can_legal: boolean; can_finance: boolean };
+type Member = { id: string; email: string | null; full_name?: string; pending?: boolean; active: boolean; can_legal: boolean; can_finance: boolean };
 export function TeamPage() {
   const qc = useQueryClient(); const list = useServerFn(listMembers), invite = useServerFn(inviteMember), update = useServerFn(setMember), remove = useServerFn(removeMember);
   const q = useQuery({ queryKey: ['members'], queryFn: () => list() });
