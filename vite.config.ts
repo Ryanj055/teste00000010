@@ -13,5 +13,5 @@ export default defineConfig({
     server: { entry: "server" },
   },
   // On Vercel builds (VERCEL=1 is set automatically) emit Vercel's server output; elsewhere keep the default.
-  ...(process.env.VERCEL ? { nitro: { preset: "vercel" } } : {}),
+  ...(process.env['VERCEL'] ? { nitro: { preset: "vercel" } } : {}),
 });
