@@ -19,7 +19,8 @@ try{
   {organization_id:oa,user_id:leg.id,email:leg.email,role:'member',can_legal:true,can_finance:false},
   {organization_id:ob,user_id:other.id,email:other.email,role:'member',can_legal:true,can_finance:true}]).select('id,user_id');
  const mid=(u:string)=>ins.data!.find(x=>x.user_id===u)!.id;
- ok('Servidor não consegue criar administrador geral sem a RTG',!!(await admin.from('organization_members').update({is_general_admin:true}).eq('id',mid(ga.id))).error);
+ await ga.c.from('organization_members').update({is_general_admin:true}).eq('id',mid(ga.id));
+ ok('Conta comum não se torna administrador geral sem a RTG',(await admin.from('organization_members').select('is_general_admin').eq('id',mid(ga.id)).single()).data!.is_general_admin===false);
  await admin.from('rtg_admins').insert({user_id:rtg.id});
  // designação pela RTG
  ok('Membro comum não se designa administrador geral',!!(await leg.c.rpc('rtg_set_general_admin',{p_org:oa,p_member:mid(leg.id)})).error);
