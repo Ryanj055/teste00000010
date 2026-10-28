@@ -3,7 +3,7 @@ import { useState, type FormEvent } from 'react';
 import { Eye, EyeOff, ArrowRight, LockKeyhole } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import logo from '@/assets/gbts-logo.png.asset.json';
+const logo = { url: '/gbts-logo.png' };
 import { head } from '@/lib/gbts/finance';
 import { DeveloperSignature } from '@/components/gbts/developer-signature';
 export const Route=createFileRoute('/auth')({validateSearch:(s:Record<string,unknown>)=>({expirada:s['expirada']==='1'?'1':undefined}) as {expirada?:string|undefined},head:()=>head('Acesso ao escritório','Acesso seguro à gestão jurídica e financeira do escritório.'),component:Auth});
