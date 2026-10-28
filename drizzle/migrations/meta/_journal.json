@@ -71,6 +71,13 @@
       "when": 1793063151855,
       "tag": "0009_allow_backend_cleanup_of_general_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793185468406,
+      "tag": "0010_harden_general_admin_and_member_removal",
+      "breakpoints": true
     }
   ]
 }

@@ -596,6 +596,7 @@ export type Database = {
           can_legal: boolean
           created_at: string
           email: string | null
+          full_name: string
           id: string
           is_general_admin: boolean
           organization_id: string
@@ -608,6 +609,7 @@ export type Database = {
           can_legal?: boolean
           created_at?: string
           email?: string | null
+          full_name?: string
           id?: string
           is_general_admin?: boolean
           organization_id: string
@@ -620,6 +622,7 @@ export type Database = {
           can_legal?: boolean
           created_at?: string
           email?: string | null
+          full_name?: string
           id?: string
           is_general_admin?: boolean
           organization_id?: string
