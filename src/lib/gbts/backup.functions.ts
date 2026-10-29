@@ -10,7 +10,7 @@ export const backupTables = [
 
 export function toCsv(rows: Record<string, unknown>[]): string {
   if (!rows.length) return '';
-  const cols = Object.keys(rows[0]);
+  const cols = Object.keys(rows[0] ?? {});
   const cell = (v: unknown) => { const s = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v); return /[",;\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   return '\uFEFF' + [cols.join(';'), ...rows.map((r) => cols.map((c) => cell(r[c])).join(';'))].join('\r\n');
 }
@@ -26,10 +26,11 @@ export const exportBackup = createServerFn({ method: 'POST' }).middleware([requi
     for (const [name, table] of backupTables) {
       const rows: Record<string, unknown>[] = [];
       for (let from = 0; ; from += 1000) {
-        const r = await db.from(table).select('*').range(from, from + 999);
+        const r = await (db.from as (t: string) => any)(table).select('*').range(from, from + 999);
         if (r.error) throw new Error(`Falha ao ler ${name}`);
-        rows.push(...(r.data as Record<string, unknown>[]));
-        if (r.data.length < 1000) break;
+        const page = (r.data ?? []) as Record<string, unknown>[];
+        rows.push(...page);
+        if (page.length < 1000) break;
       }
       files.push({ name: `${name}.csv`, csv: toCsv(rows), rows: rows.length });
     }
