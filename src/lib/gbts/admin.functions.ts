@@ -130,3 +130,100 @@ export const removeMember = createServerFn({ method: 'POST' }).middleware([requi
     await supabaseAdmin.from('admin_events').insert({ organization_id: m.organization_id, actor: context.userId, action: 'Conta removida', details: { email: m.email } });
     return true;
   });
+
+const idInput = (i: unknown) => z.object({ id: z.string().uuid() }).parse(i);
+
+/** Edição do nome exibido; a regra de quem pode editar fica no banco. */
+export const renameMember = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), name: z.string().trim().min(2).max(150) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc('office_rename_member', { p_member: data.id, p_name: data.name });
+    if (error) throw new Error(error.message);
+    return true;
+  });
+
+/** A administração geral do escritório transfere a função para outra pessoa ativa; o escritório nunca fica sem administração. */
+export const transferGeneralAdmin = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(idInput)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc('office_transfer_general_admin', { p_member: data.id });
+    if (error) throw new Error(error.message);
+    return true;
+  });
+
+async function manageable(context: { supabase: any; userId: string }, id: string) {
+  const [{ data: rtg }, { data: isAdmin }, { data: own }] = await Promise.all([
+    context.supabase.rpc('is_rtg_admin'), context.supabase.rpc('is_general_admin'), context.supabase.rpc('current_org'),
+  ]);
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const { data: m } = await supabaseAdmin.from('organization_members').select('id,organization_id,user_id,email,active').eq('id', id).maybeSingle();
+  if (!m) throw new Error('Pessoa não encontrada.');
+  if (!(rtg || (isAdmin && own === m.organization_id))) throw new Error('Você não tem permissão para esta ação.');
+  return { m, supabaseAdmin };
+}
+
+/** Reenvia o link individual de acesso para quem ainda não entrou. Só informa sucesso quando o serviço de login aceita o envio. */
+export const resendInvite = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), redirect: z.string().url() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { m, supabaseAdmin } = await manageable(context, data.id);
+    if (!m.active || !m.email) throw new Error('Reative a conta antes de reenviar o convite.');
+    const u = await supabaseAdmin.auth.admin.getUserById(m.user_id);
+    if (u.data.user?.last_sign_in_at) throw new Error('Esta pessoa já aceitou o convite. Ela pode usar "Esqueci minha senha".');
+    const redirect = new URL(data.redirect); redirect.pathname = '/reset-password';
+    const sent = await supabaseAdmin.auth.resetPasswordForEmail(m.email, { redirectTo: redirect.toString() });
+    if (sent.error) throw new Error('O serviço de e-mail recusou o reenvio. Tente novamente em alguns minutos.');
+    await supabaseAdmin.from('admin_events').insert({ organization_id: m.organization_id, actor: context.userId, action: 'Convite reenviado', details: { email: m.email } });
+    return true;
+  });
+
+/** Histórico administrativo e autorizações da RTG do próprio escritório (somente administração geral). */
+export const getTeamAdmin = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const [{ data: isAdmin }, { data: own }] = await Promise.all([context.supabase.rpc('is_general_admin'), context.supabase.rpc('current_org')]);
+  if (!isAdmin || !own) throw new Error('Acesso restrito à administração do escritório.');
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const [events, auths] = await Promise.all([
+    supabaseAdmin.from('admin_events').select('id,action,details,created_at').eq('organization_id', own as string).order('created_at', { ascending: false }).limit(50),
+    context.supabase.from('rtg_authorizations').select('*').order('granted_at', { ascending: false }),
+  ]);
+  if (events.error || auths.error) throw new Error('Não foi possível consultar o histórico.');
+  return { events: events.data, authorizations: auths.data };
+});
+
+export const grantRtg = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ email: z.string().trim().email().max(255) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc('office_grant_rtg', { p_email: data.email });
+    if (error) throw new Error(error.message);
+    return true;
+  });
+
+export const revokeRtg = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(idInput)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc('office_revoke_rtg', { p_id: data.id });
+    if (error) throw new Error(error.message);
+    return true;
+  });
+
+/**
+ * Remoção do próprio perfil: apaga o vínculo e a identidade de login (encerra o acesso).
+ * Registros do escritório são preservados. A administração geral precisa transferir a função antes.
+ */
+export const removeSelf = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ confirm: z.literal('REMOVER') }).parse(i))
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const [{ data: rows }, { data: rtgRow }] = await Promise.all([
+      supabaseAdmin.from('organization_members').select('id,organization_id,email,is_general_admin,active').eq('user_id', context.userId),
+      supabaseAdmin.from('rtg_admins').select('user_id').eq('user_id', context.userId).maybeSingle(),
+    ]);
+    if (rtgRow) throw new Error('Perfis da RTG Systems são removidos pela própria RTG.');
+    if (rows?.some((r) => r.is_general_admin && r.active)) throw new Error('Você é a administração geral. Transfira a função para outra pessoa em "Equipe e acessos" antes de remover seu perfil.');
+    for (const r of rows ?? []) {
+      await supabaseAdmin.from('admin_events').insert({ organization_id: r.organization_id, actor: context.userId, action: 'Perfil removido pela própria pessoa', details: { email: r.email } });
+      const del = await supabaseAdmin.from('organization_members').delete().eq('id', r.id);
+      if (del.error) throw new Error('Não foi possível remover seu vínculo com o escritório.');
+    }
+    const gone = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    if (gone.error) throw new Error('Seu vínculo foi removido, mas a conta de login não pôde ser apagada. Tente novamente.');
+    return true;
+  });
