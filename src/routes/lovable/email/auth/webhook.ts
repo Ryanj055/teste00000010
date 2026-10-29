@@ -16,7 +16,7 @@ const FROM_DOMAIN = "rtgsystems.com"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
 /** Nome da pessoa, escritório e remetente do convite mais recente para este e-mail (gravado antes do envio). */
-async function inviteContext(email: string): Promise<{ name?: string; office?: string; inviter?: string }> {
+async function inviteContext(email: string): Promise<{ name?: string | undefined; office?: string | undefined; inviter?: string | undefined }> {
   try {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
     const { data: ev } = await supabaseAdmin.from('admin_events').select('organization_id, actor, details')

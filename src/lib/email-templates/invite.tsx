@@ -5,9 +5,9 @@ interface InviteEmailProps {
   siteName: string
   siteUrl: string
   confirmationUrl: string
-  name?: string
-  office?: string
-  inviter?: string
+  name?: string | undefined
+  office?: string | undefined
+  inviter?: string | undefined
 }
 
 export const InviteEmail = ({ confirmationUrl, name, office, inviter }: InviteEmailProps) => {
