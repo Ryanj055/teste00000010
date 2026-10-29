@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 const logo = { url: '/gbts-logo.png' };
-import { inviteMember, listMembers, removeMember, renameMember, resendInvite, setMember, transferGeneralAdmin, type OrgStatus }
-import { TeamAdminSection } from './admin-pages'; from '@/lib/gbts/admin.functions';
+import { inviteMember, listMembers, removeMember, renameMember, resendInvite, setMember, transferGeneralAdmin, type OrgStatus } from '@/lib/gbts/admin.functions';
+import { TeamAdminSection } from './admin-pages';
 import { renegotiate } from '@/lib/gbts/data.functions';
 import { dateLabel, money, schedule, today, type Schedule } from '@/lib/gbts/finance';
 import { Field, Modal } from './forms';
