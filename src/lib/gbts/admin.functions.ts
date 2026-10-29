@@ -94,11 +94,12 @@ export const inviteMember = createServerFn({ method: 'POST' }).middleware([requi
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const existing = await supabaseAdmin.from('organization_members').select('id').eq('email', data.email).maybeSingle();
     if (existing.data) throw new Error('Este e-mail já está vinculado a um escritório.');
+    // Registrado antes do envio: o e-mail de convite lê nome, escritório e remetente deste evento.
+    await supabaseAdmin.from('admin_events').insert({ organization_id: org, actor: context.userId, action: 'Pessoa convidada', details: { email: data.email, nome: data.name, juridico: true, financeiro: data.finance } });
     const invited = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, { redirectTo: redirect.toString() });
     if (invited.error || !invited.data.user) throw new Error('Não foi possível enviar o convite. Verifique se o e-mail já possui conta.');
     const inserted = await supabaseAdmin.from('organization_members').insert({ organization_id: org, user_id: invited.data.user.id, email: data.email, full_name: data.name, role: 'member', can_legal: true, can_finance: data.finance });
     if (inserted.error) throw new Error('Convite enviado, mas não foi possível vincular a pessoa. Contate o suporte.');
-    await supabaseAdmin.from('admin_events').insert({ organization_id: org, actor: context.userId, action: 'Pessoa convidada', details: { email: data.email, juridico: true, financeiro: data.finance } });
     return true;
   });
 
