@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { LockKeyhole, LogOut, UserPlus, RefreshCw } from 'lucide-react';
+import { LockKeyhole, LogOut, UserPlus, RefreshCw, Sparkles } from 'lucide-react';
+import { suggestAccess, type AccessSuggestion } from '@/lib/gbts/access-advisor.functions';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,11 +87,32 @@ export function TeamPage() {
             <td><input type="checkbox" aria-label={`Acesso jurídico de ${m.email}`} disabled={locked} checked={m.can_legal} onChange={(e) => change(m, { can_legal: e.target.checked })} /></td>
             <td><input type="checkbox" aria-label={`Acesso financeiro de ${m.email}`} disabled={locked} checked={m.can_finance} onChange={(e) => change(m, { can_finance: e.target.checked })} /></td>
             <td><span className={`badge ${m.active ? 'paid' : 'partial'}`}>{!m.active ? 'Desativado' : m.pending ? 'Convite pendente' : 'Ativo'}</span></td><td>{dateLabel(m.created_at)}</td>
-            <td>{!locked && (m.active ? <Button variant="outline" size="sm" onClick={() => setConfirmOff(m)}>Desativar</Button> : <Button variant="outline" size="sm" onClick={() => change(m, { active: true })}>Reativar</Button>)}{!locked && <Button variant="ghost" size="sm" className="ml-2 text-destructive" onClick={() => setConfirmDel(m)}>Remover</Button>}</td></tr>; })}
+            <td>{!locked && (m.active ? <Button variant="outline" size="sm" onClick={() => setConfirmOff(m)}>Desativar</Button> : <Button variant="outline" size="sm" onClick={() => change(m, { active: true })}>Reativar</Button>)}{!locked && m.active && <Button variant="ghost" size="sm" className="ml-2" onClick={() => setAdvise(m)}><Sparkles size={14} />Sugerir acessos</Button>}{!locked && <Button variant="ghost" size="sm" className="ml-2 text-destructive" onClick={() => setConfirmDel(m)}>Remover</Button>}</td></tr>; })}
       </tbody></table></div>}</section>
+    {advise && <AccessAdvisor member={advise} onClose={() => setAdvise(null)} onApply={async (r) => { await change(advise, { can_legal: r.legal, can_finance: r.finance }); setAdvise(null); }} />}
     {confirmOff && <Modal title="Desativar acesso" onClose={() => setConfirmOff(null)}><div className="modal-body"><p className="text-sm">{confirmOff.email} deixará de acessar o escritório. Os registros criados pela pessoa são preservados.</p></div>
       <div className="modal-footer"><Button variant="outline" onClick={() => setConfirmOff(null)}>Cancelar</Button><Button variant="destructive" onClick={async () => { await change(confirmOff, { active: false }); setConfirmOff(null); }}>Desativar</Button></div></Modal>}
     {confirmDel && <Modal title="Remover conta" onClose={() => setConfirmDel(null)}><div className="modal-body"><p className="text-sm">{confirmDel.email} será removida da equipe e a conta de login será apagada. Clientes, contratos, processos, cobranças e históricos do escritório são preservados. Esta ação não pode ser desfeita.</p></div>
       <div className="modal-footer"><Button variant="outline" onClick={() => setConfirmDel(null)}>Cancelar</Button><Button variant="destructive" onClick={async () => { try { await remove({ data: { id: confirmDel.id } }); toast.success('Conta removida.'); await qc.invalidateQueries({ queryKey: ['members'] }); } catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível remover.'); } setConfirmDel(null); }}>Remover definitivamente</Button></div></Modal>}
   </>;
+}
+
+function AccessAdvisor({ member, onClose, onApply }: { member: Member; onClose: () => void; onApply: (r: AccessSuggestion) => Promise<void> }) {
+  const suggest = useServerFn(suggestAccess);
+  const [text, setText] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [result, setResult] = useState<AccessSuggestion | null>(null);
+  const who = member.full_name || member.email || 'esta pessoa';
+  async function run(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault(); setBusy(true); setError(''); setResult(null);
+    try { setResult(await suggest({ data: { responsibilities: text } })); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Não foi possível gerar a sugestão.'); } finally { setBusy(false); }
+  }
+  const yes = (v: boolean) => v ? 'Sim' : 'Não';
+  return <Modal title={`Sugerir acessos · ${who}`} onClose={onClose}><form onSubmit={run}><div className="modal-body">
+    <Field label="Responsabilidades da pessoa" full><textarea rows={4} required minLength={10} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder="Ex.: atende clientes, acompanha prazos processuais e prepara petições; não lida com cobranças." /></Field>
+    <div className="form-note mt-3">A sugestão é gerada por inteligência artificial e não altera nada sozinha. Revise antes de aplicar. Não inclua dados de clientes ou processos.</div>
+    {result && <div className="panel p-4 mt-4" role="status"><p className="text-sm mb-2"><strong>Jurídico:</strong> {yes(result.legal)} (atual: {yes(member.can_legal)}) · <strong>Financeiro:</strong> {yes(result.finance)} (atual: {yes(member.can_finance)})</p><p className="text-xs text-muted-foreground">{result.rationale}</p></div>}
+    {error && <div className="form-error" role="alert">{error}</div>}
+  </div><div className="modal-footer"><Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
+    {result ? <Button type="button" disabled={busy} onClick={async () => { setBusy(true); await onApply(result); setBusy(false); }}>Aplicar sugestão</Button>
+      : <Button disabled={busy || text.trim().length < 10}><Sparkles size={15} />{busy ? 'Analisando…' : 'Gerar sugestão'}</Button>}</div></form></Modal>;
 }
