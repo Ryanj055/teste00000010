@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { Plus, Trash2, Undo2 } from 'lucide-react';
+import { Archive, CheckCircle2, Plus, Trash2, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { saveAssociate, saveDivision, savePayout, voidEntry, removeClient, closeContract } from '@/lib/gbts/review.functions';
