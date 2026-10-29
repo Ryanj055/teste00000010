@@ -36,7 +36,7 @@
 
 ## Revisão definitiva — 29/10/2026 (em etapas)
 - [x] Cadastro público desligado, proteção contra senhas vazadas ligada.
-- [ ] Etapa 1: domínio de e-mail e convite profissional — aguarda configuração do domínio pelo usuário.
+- [x] Etapa 1: e-mails de acesso em português com a identidade do sistema (convite com nome, escritório e remetente). Envio real depende da verificação do domínio notify.rtgsystems.com.
 - [ ] Etapa 2: Equipe e Acessos completa (editar, reenviar, reativar, administradores pelo escritório, autorização RTG, remover meu perfil).
 - [ ] Etapa 3: Central de Backups (exportação ZIP, histórico, lembrete de sexta).
 - [ ] Etapa 4: menu reorganizado, linguagem neutra, revisão das áreas jurídica/financeira e testes.
