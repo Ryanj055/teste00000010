@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { nextFriday } from '@/components/gbts/admin-pages';
-import { toCsv } from './backup.functions';
+import { toCsv } from '@/lib/gbts/backup.functions';
 
 describe('Central de Backups', () => {
   it('lembrete aponta para a próxima sexta-feira', () => {
