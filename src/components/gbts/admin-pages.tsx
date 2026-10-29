@@ -89,7 +89,9 @@ export function TeamAdminSection() {
   </>;
 }
 
-export function ProfilePage({ email, generalAdmin }: { email: string; generalAdmin: boolean }) {
+export function ProfilePage({ generalAdmin }: { generalAdmin: boolean }) {
+  const me = useQuery({ queryKey: ['me-email'], queryFn: async () => (await supabase.auth.getUser()).data.user?.email ?? '' });
+  const email = me.data ?? '';
   const navigate = useNavigate(), qc = useQueryClient(); const remove = useServerFn(removeSelf);
   const [open, setOpen] = useState(false), [text, setText] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
   async function confirm() {

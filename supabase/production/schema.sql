@@ -1,6 +1,3 @@
--- Estrutura completa do banco (gerada a partir de drizzle/migrations). Aplicar uma única vez em um projeto Supabase novo, pelo SQL Editor.
-
--- ===== drizzle/migrations/0000_gbts_core.sql =====
 CREATE TYPE public.app_role AS ENUM ('admin','partner');
 CREATE TABLE public.user_roles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE, role public.app_role NOT NULL, UNIQUE(user_id,role));
 GRANT SELECT ON public.user_roles TO authenticated; GRANT ALL ON public.user_roles TO service_role;
@@ -48,27 +45,19 @@ CREATE FUNCTION public.record_payment(p_installment uuid,p_amount numeric,p_date
 REVOKE ALL ON FUNCTION public.record_payment(uuid,numeric,date,text,uuid,text,text) FROM PUBLIC; GRANT EXECUTE ON FUNCTION public.record_payment(uuid,numeric,date,text,uuid,text,text) TO authenticated;
 CREATE FUNCTION public.create_contract(p_client uuid,p_number text,p_subject text,p_responsible text,p_modality text,p_total numeric,p_signed date,p_schedule jsonb,p_notes text DEFAULT NULL) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE v_id uuid; v_sum numeric; BEGIN IF NOT public.is_partner() THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF; IF jsonb_array_length(p_schedule)<1 OR jsonb_array_length(p_schedule)>120 THEN RAISE EXCEPTION 'Cronograma inválido'; END IF; SELECT sum((x->>'amount')::numeric) INTO v_sum FROM jsonb_array_elements(p_schedule) x; IF v_sum<>p_total OR p_total<=0 OR EXISTS(SELECT 1 FROM jsonb_array_elements(p_schedule) x WHERE (x->>'amount')::numeric<=0 OR (x->>'amount')::numeric<>round((x->>'amount')::numeric,2)) THEN RAISE EXCEPTION 'O cronograma deve totalizar o valor do contrato'; END IF; INSERT INTO public.contracts(client_id,number,subject,responsible,modality,total,signed_at,notes) VALUES(p_client,p_number,p_subject,p_responsible,p_modality,p_total,p_signed,p_notes) RETURNING id INTO v_id; INSERT INTO public.installments(contract_id,label,amount,due_date) SELECT v_id,x->>'label',(x->>'amount')::numeric,(x->>'due_date')::date FROM jsonb_array_elements(p_schedule) x; RETURN v_id; END $$;
 REVOKE ALL ON FUNCTION public.create_contract(uuid,text,text,text,text,numeric,date,jsonb,text) FROM PUBLIC; GRANT EXECUTE ON FUNCTION public.create_contract(uuid,text,text,text,text,numeric,date,jsonb,text) TO authenticated;
-CREATE INDEX installments_contract_idx ON public.installments(contract_id); CREATE INDEX payments_installment_idx ON public.payments(installment_id); CREATE INDEX contracts_client_idx ON public.contracts(client_id);
--- ===== drizzle/migrations/0001_restrict_helper_execution.sql =====
-REVOKE ALL ON FUNCTION public.has_role(uuid,public.app_role) FROM PUBLIC,anon; GRANT EXECUTE ON FUNCTION public.has_role(uuid,public.app_role) TO authenticated,service_role;
+CREATE INDEX installments_contract_idx ON public.installments(contract_id); CREATE INDEX payments_installment_idx ON public.payments(installment_id); CREATE INDEX contracts_client_idx ON public.contracts(client_id);REVOKE ALL ON FUNCTION public.has_role(uuid,public.app_role) FROM PUBLIC,anon; GRANT EXECUTE ON FUNCTION public.has_role(uuid,public.app_role) TO authenticated,service_role;
 REVOKE ALL ON FUNCTION public.is_partner() FROM PUBLIC,anon; GRANT EXECUTE ON FUNCTION public.is_partner() TO authenticated,service_role;
-REVOKE ALL ON FUNCTION public.audit_change() FROM PUBLIC,anon,authenticated;
--- ===== drizzle/migrations/0002_restrict_financial_rpc_anonymous_access.sql =====
-REVOKE ALL ON FUNCTION public.record_payment(uuid,numeric,date,text,uuid,text,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.audit_change() FROM PUBLIC,anon,authenticated;REVOKE ALL ON FUNCTION public.record_payment(uuid,numeric,date,text,uuid,text,text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.record_payment(uuid,numeric,date,text,uuid,text,text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.create_contract(uuid,text,text,text,text,numeric,date,jsonb,text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.create_contract(uuid,text,text,text,text,numeric,date,jsonb,text) TO authenticated, service_role;
--- ===== drizzle/migrations/0003_legal_cases.sql =====
-CREATE TABLE public.legal_cases(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), number text NOT NULL UNIQUE CHECK(length(number) BETWEEN 3 AND 60), client_id uuid NOT NULL REFERENCES public.clients(id), subject text NOT NULL CHECK(length(subject) BETWEEN 2 AND 500), responsible text NOT NULL, status text NOT NULL DEFAULT 'Em andamento' CHECK(status IN ('Em andamento','Suspenso','Arquivado','Encerrado')), next_deadline date, deadline_note text, notes text, demo boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
+GRANT EXECUTE ON FUNCTION public.create_contract(uuid,text,text,text,text,numeric,date,jsonb,text) TO authenticated, service_role;CREATE TABLE public.legal_cases(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), number text NOT NULL UNIQUE CHECK(length(number) BETWEEN 3 AND 60), client_id uuid NOT NULL REFERENCES public.clients(id), subject text NOT NULL CHECK(length(subject) BETWEEN 2 AND 500), responsible text NOT NULL, status text NOT NULL DEFAULT 'Em andamento' CHECK(status IN ('Em andamento','Suspenso','Arquivado','Encerrado')), next_deadline date, deadline_note text, notes text, demo boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
 GRANT SELECT, INSERT, UPDATE ON public.legal_cases TO authenticated;
 GRANT SELECT ON public.legal_cases TO anon;
 GRANT ALL ON public.legal_cases TO service_role;
 ALTER TABLE public.legal_cases ENABLE ROW LEVEL SECURITY;
 CREATE POLICY partner_cases ON public.legal_cases FOR ALL TO authenticated USING(public.is_partner()) WITH CHECK(public.is_partner());
 CREATE POLICY demo_cases ON public.legal_cases FOR SELECT TO anon USING(demo);
-CREATE TRIGGER legal_cases_audit AFTER INSERT OR UPDATE ON public.legal_cases FOR EACH ROW EXECUTE FUNCTION public.audit_change();
--- ===== drizzle/migrations/0004_multi_office_tenancy.sql =====
-CREATE TABLE public.organizations(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL CHECK(length(name) BETWEEN 2 AND 200), contact_name text, contact_email text, contact_phone text, support_notes text, plan text NOT NULL DEFAULT 'Essencial', status text NOT NULL DEFAULT 'setup' CHECK(status IN ('setup','trial','active','payment_pending','suspended','closed')), trial_ends_at date, starts_at date, ends_at date, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TRIGGER legal_cases_audit AFTER INSERT OR UPDATE ON public.legal_cases FOR EACH ROW EXECUTE FUNCTION public.audit_change();CREATE TABLE public.organizations(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL CHECK(length(name) BETWEEN 2 AND 200), contact_name text, contact_email text, contact_phone text, support_notes text, plan text NOT NULL DEFAULT 'Essencial', status text NOT NULL DEFAULT 'setup' CHECK(status IN ('setup','trial','active','payment_pending','suspended','closed')), trial_ends_at date, starts_at date, ends_at date, created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE public.organization_members(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid NOT NULL REFERENCES public.organizations(id), user_id uuid NOT NULL, email text, role text NOT NULL DEFAULT 'member' CHECK(role IN ('admin','member')), active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(user_id));
 CREATE TABLE public.rtg_admins(user_id uuid PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE public.admin_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid REFERENCES public.organizations(id), actor uuid, action text NOT NULL, details jsonb, created_at timestamptz NOT NULL DEFAULT now());
@@ -142,9 +131,7 @@ CREATE FUNCTION public.rtg_save_org(p_id uuid,p_name text,p_contact_name text,p_
 
 CREATE FUNCTION public.set_member_status(p_member uuid,p_active boolean,p_role text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE v_org uuid; v_user uuid; BEGIN SELECT organization_id,user_id INTO v_org,v_user FROM public.organization_members WHERE id=p_member; IF v_org IS NULL THEN RAISE EXCEPTION 'Usuária não encontrada'; END IF; IF NOT (public.is_rtg_admin() OR (public.is_org_admin() AND v_org=public.current_org())) THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF; IF v_user=auth.uid() AND (NOT p_active OR p_role<>'admin') THEN RAISE EXCEPTION 'Você não pode remover o próprio acesso de administradora'; END IF; IF p_role NOT IN ('admin','member') THEN RAISE EXCEPTION 'Papel inválido'; END IF; UPDATE public.organization_members SET active=p_active,role=p_role WHERE id=p_member; INSERT INTO public.admin_events(organization_id,actor,action,details) VALUES(v_org,auth.uid(),'Usuária atualizada',jsonb_build_object('membro',p_member,'ativa',p_active,'papel',p_role)); END $$;
 
-DO $$ DECLARE f text; BEGIN FOREACH f IN ARRAY ARRAY['is_rtg_admin()','current_org()','org_access_ok(uuid)','can_access(uuid)','is_org_admin()','my_access()','rtg_save_org(uuid,text,text,text,text,text,text,text,date,date,date)','set_member_status(uuid,boolean,text)','renegotiate_contract(uuid,jsonb,text)'] LOOP EXECUTE 'REVOKE ALL ON FUNCTION public.'||f||' FROM PUBLIC, anon'; EXECUTE 'GRANT EXECUTE ON FUNCTION public.'||f||' TO authenticated, service_role'; END LOOP; END $$;
--- ===== drizzle/migrations/0005_finance_review_and_fee_sharing.sql =====
-ALTER TABLE public.payments ADD COLUMN voided_at timestamptz, ADD COLUMN void_reason text, ADD COLUMN voided_by uuid;
+DO $$ DECLARE f text; BEGIN FOREACH f IN ARRAY ARRAY['is_rtg_admin()','current_org()','org_access_ok(uuid)','can_access(uuid)','is_org_admin()','my_access()','rtg_save_org(uuid,text,text,text,text,text,text,text,date,date,date)','set_member_status(uuid,boolean,text)','renegotiate_contract(uuid,jsonb,text)'] LOOP EXECUTE 'REVOKE ALL ON FUNCTION public.'||f||' FROM PUBLIC, anon'; EXECUTE 'GRANT EXECUTE ON FUNCTION public.'||f||' TO authenticated, service_role'; END LOOP; END $$;ALTER TABLE public.payments ADD COLUMN voided_at timestamptz, ADD COLUMN void_reason text, ADD COLUMN voided_by uuid;
 ALTER TABLE public.contracts ADD COLUMN expected_method text;
 ALTER TABLE public.legal_cases ADD COLUMN legal_area text, ADD COLUMN closed_at date;
 CREATE TABLE public.associates(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid NOT NULL DEFAULT public.current_org() REFERENCES public.organizations(id), name text NOT NULL CHECK(length(trim(name)) BETWEEN 2 AND 150), active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(organization_id,name));
@@ -226,9 +213,7 @@ CREATE VIEW public.receipt_ledger WITH(security_invoker=true) AS SELECT id AS ev
 GRANT SELECT ON public.receipt_ledger TO authenticated,service_role;
 CREATE VIEW public.payout_ledger WITH(security_invoker=true) AS SELECT id AS event_id,organization_id,division_id,paid_at AS effective_date,amount FROM public.fee_payouts UNION ALL SELECT id,organization_id,division_id,(voided_at AT TIME ZONE 'America/Sao_Paulo')::date,-amount FROM public.fee_payouts WHERE voided_at IS NOT NULL;
 GRANT SELECT ON public.payout_ledger TO authenticated,service_role;
-DO $$ DECLARE f text;BEGIN FOREACH f IN ARRAY ARRAY['remove_client(uuid,boolean)','save_fee_division(uuid,text,text,jsonb,text)','record_fee_payout(uuid,uuid,numeric,date,text,uuid,uuid,text,text)','void_financial_entry(uuid,text,text)','create_contract_review(uuid,text,text,text,text,numeric,date,jsonb,text,text)'] LOOP EXECUTE 'REVOKE ALL ON FUNCTION public.'||f||' FROM PUBLIC,anon'; EXECUTE 'GRANT EXECUTE ON FUNCTION public.'||f||' TO authenticated,service_role'; END LOOP; END $$;
--- ===== drizzle/migrations/0006_preserve_schedule_history_and_local_dates.sql =====
-ALTER TABLE public.installments ADD COLUMN superseded boolean NOT NULL DEFAULT false, ADD COLUMN original_amount numeric(14,2);
+DO $$ DECLARE f text;BEGIN FOREACH f IN ARRAY ARRAY['remove_client(uuid,boolean)','save_fee_division(uuid,text,text,jsonb,text)','record_fee_payout(uuid,uuid,numeric,date,text,uuid,uuid,text,text)','void_financial_entry(uuid,text,text)','create_contract_review(uuid,text,text,text,text,numeric,date,jsonb,text,text)'] LOOP EXECUTE 'REVOKE ALL ON FUNCTION public.'||f||' FROM PUBLIC,anon'; EXECUTE 'GRANT EXECUTE ON FUNCTION public.'||f||' TO authenticated,service_role'; END LOOP; END $$;ALTER TABLE public.installments ADD COLUMN superseded boolean NOT NULL DEFAULT false, ADD COLUMN original_amount numeric(14,2);
 UPDATE public.installments SET original_amount=amount;
 CREATE OR REPLACE VIEW public.receivables WITH(security_invoker=true) AS SELECT i.id,i.contract_id,i.label,i.amount,i.due_date,i.demo,coalesce(p.paid,0)::numeric(14,2) paid,(i.amount-coalesce(p.paid,0))::numeric(14,2) balance,p.last_payment,CASE WHEN coalesce(p.paid,0)>=i.amount THEN 'Pago' WHEN i.due_date<(now() AT TIME ZONE 'America/Sao_Paulo')::date THEN 'Vencido' WHEN coalesce(p.paid,0)>0 THEN 'Parcialmente pago' ELSE 'A vencer' END status FROM public.installments i LEFT JOIN (SELECT installment_id,sum(amount) paid,max(paid_at) last_payment FROM public.payments WHERE voided_at IS NULL GROUP BY installment_id) p ON p.installment_id=i.id WHERE NOT i.superseded;
 CREATE OR REPLACE FUNCTION public.renegotiate_contract(p_contract uuid,p_schedule jsonb,p_reason text) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE v_org uuid:=public.current_org();v_open numeric;v_sum numeric;v_round int;BEGIN
@@ -248,9 +233,7 @@ UPDATE public.contracts SET status='Ativo',notes=concat_ws(E'\n',notes,'Renegoci
 INSERT INTO public.audit_log(entity,entity_id,action,user_id,organization_id) VALUES('renegotiation',p_contract,'UPDATE',auth.uid(),v_org);RETURN v_round;END $$;
 CREATE FUNCTION public.reject_superseded_payment() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN IF EXISTS(SELECT 1 FROM public.installments WHERE id=NEW.installment_id AND superseded) THEN RAISE EXCEPTION 'Parcela substituída por renegociação';END IF;RETURN NEW;END $$;
 REVOKE ALL ON FUNCTION public.reject_superseded_payment() FROM PUBLIC,anon;
-CREATE TRIGGER check_superseded BEFORE INSERT ON public.payments FOR EACH ROW EXECUTE FUNCTION public.reject_superseded_payment();
--- ===== drizzle/migrations/0007_allow_reconciled_reversals_and_fixed_payout_checks.sql =====
-CREATE OR REPLACE FUNCTION public.void_financial_entry(p_id uuid,p_kind text,p_reason text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE v_org uuid:=public.current_org();v_contract uuid;v_inst uuid; BEGIN
+CREATE TRIGGER check_superseded BEFORE INSERT ON public.payments FOR EACH ROW EXECUTE FUNCTION public.reject_superseded_payment();CREATE OR REPLACE FUNCTION public.void_financial_entry(p_id uuid,p_kind text,p_reason text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE v_org uuid:=public.current_org();v_contract uuid;v_inst uuid; BEGIN
 IF NOT public.can_access(v_org) THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF; IF p_reason IS NULL OR length(trim(p_reason))<3 OR length(p_reason)>500 THEN RAISE EXCEPTION 'Informe o motivo do estorno'; END IF;
 IF p_kind='payment' THEN SELECT p.installment_id,i.contract_id INTO v_inst,v_contract FROM public.payments p JOIN public.installments i ON i.id=p.installment_id WHERE p.id=p_id AND p.organization_id=v_org; IF NOT FOUND THEN RAISE EXCEPTION 'Recebimento não encontrado'; END IF;
 PERFORM 1 FROM public.contracts WHERE id=v_contract FOR UPDATE; PERFORM 1 FROM public.installments WHERE id=v_inst FOR UPDATE;
@@ -263,9 +246,7 @@ ELSE RAISE EXCEPTION 'Tipo de lançamento inválido'; END IF;
 IF FOUND THEN INSERT INTO public.finance_events(organization_id,entity_id,action,details,user_id) VALUES(v_org,p_id,'Estorno de '||p_kind,jsonb_build_object('reason',p_reason),auth.uid());INSERT INTO public.finance_events(organization_id,entity_id,action,details,user_id) VALUES(v_org,v_contract,'Impacto do estorno',jsonb_build_object('entry',p_id,'kind',p_kind,'reason',p_reason),auth.uid()); END IF; END $$;
 CREATE FUNCTION public.validate_fixed_payout_base() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE d public.fee_divisions;v_base numeric;v_sum numeric;BEGIN SELECT * INTO d FROM public.fee_divisions WHERE id=NEW.division_id; IF d.mode='fixed' THEN IF d.basis='contracted' THEN SELECT total INTO v_base FROM public.contracts WHERE id=d.contract_id; ELSE SELECT coalesce(sum(p.amount),0) INTO v_base FROM public.payments p JOIN public.installments i ON i.id=p.installment_id WHERE i.contract_id=d.contract_id AND p.voided_at IS NULL; END IF; SELECT sum((x->>'value')::numeric) INTO v_sum FROM jsonb_array_elements(d.allocations)x;IF v_sum<>v_base THEN RAISE EXCEPTION 'A base recebida mudou. Salve uma nova versão dos valores fixos antes do repasse.';END IF;END IF;RETURN NEW;END $$;
 REVOKE ALL ON FUNCTION public.validate_fixed_payout_base() FROM PUBLIC,anon;
-CREATE TRIGGER fixed_payout_base BEFORE INSERT ON public.fee_payouts FOR EACH ROW EXECUTE FUNCTION public.validate_fixed_payout_base();
--- ===== drizzle/migrations/0008_domain_permissions_and_general_admin.sql =====
-ALTER TABLE public.organization_members
+CREATE TRIGGER fixed_payout_base BEFORE INSERT ON public.fee_payouts FOR EACH ROW EXECUTE FUNCTION public.validate_fixed_payout_base();ALTER TABLE public.organization_members
   ADD COLUMN IF NOT EXISTS can_legal boolean NOT NULL DEFAULT true,
   ADD COLUMN IF NOT EXISTS can_finance boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS is_general_admin boolean NOT NULL DEFAULT false;
@@ -394,13 +375,9 @@ DO $$ DECLARE f text; BEGIN
   FOREACH f IN ARRAY ARRAY['guard_member_flags()','guard_member_delete()','require_finance_write()','require_legal_write()'] LOOP
     EXECUTE 'REVOKE ALL ON FUNCTION public.'||f||' FROM PUBLIC, anon, authenticated';
   END LOOP;
-END $$;
--- ===== drizzle/migrations/0009_allow_backend_cleanup_of_general_admin.sql =====
-CREATE OR REPLACE FUNCTION public.guard_member_delete() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+END $$;CREATE OR REPLACE FUNCTION public.guard_member_delete() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 BEGIN IF auth.uid() IS NOT NULL AND OLD.is_general_admin AND OLD.active THEN RAISE EXCEPTION 'Designe outro administrador geral antes de remover esta conta'; END IF; RETURN OLD; END $$;
-REVOKE ALL ON FUNCTION public.guard_member_delete() FROM PUBLIC, anon, authenticated;
--- ===== drizzle/migrations/0010_harden_general_admin_and_member_removal.sql =====
-ALTER TABLE public.organization_members ADD COLUMN IF NOT EXISTS full_name text NOT NULL DEFAULT '';
+REVOKE ALL ON FUNCTION public.guard_member_delete() FROM PUBLIC, anon, authenticated;ALTER TABLE public.organization_members ADD COLUMN IF NOT EXISTS full_name text NOT NULL DEFAULT '';
 
 -- The general-admin flag can change only from privileged backend code (RTG designation function runs as owner); direct client updates run as authenticated/anon and are rejected.
 CREATE OR REPLACE FUNCTION public.guard_member_flags() RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path TO 'public' AS $$
@@ -432,9 +409,7 @@ BEGIN IF current_user IN ('authenticated','anon') AND OLD.is_general_admin AND O
 
 REVOKE UPDATE (is_general_admin) ON public.organization_members FROM anon, authenticated;
 REVOKE ALL ON FUNCTION public.guard_member_flags() FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.guard_member_delete() FROM PUBLIC, anon, authenticated;
--- ===== drizzle/migrations/0011_designation_keeps_module_access.sql =====
-CREATE OR REPLACE FUNCTION public.rtg_set_general_admin(p_org uuid, p_member uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+REVOKE ALL ON FUNCTION public.guard_member_delete() FROM PUBLIC, anon, authenticated;CREATE OR REPLACE FUNCTION public.rtg_set_general_admin(p_org uuid, p_member uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 DECLARE v_old uuid; v_old_email text; v_new_email text;
 BEGIN
   IF NOT public.is_rtg_admin() THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF;
@@ -445,4 +420,108 @@ BEGIN
   UPDATE public.organization_members SET is_general_admin=false WHERE organization_id=p_org AND is_general_admin;
   UPDATE public.organization_members SET is_general_admin=true WHERE id=p_member;
   INSERT INTO public.admin_events(organization_id,actor,action,details) VALUES(p_org,auth.uid(),'Administrador geral designado',jsonb_build_object('de',v_old_email,'para',v_new_email));
+END $$;CREATE TABLE public.rtg_authorizations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES public.organizations(id),
+  rtg_user_id uuid NOT NULL,
+  rtg_email text NOT NULL,
+  scope text NOT NULL DEFAULT 'backup_history',
+  granted_by uuid,
+  granted_at timestamptz NOT NULL DEFAULT now(),
+  revoked_at timestamptz,
+  revoked_by uuid
+);
+GRANT SELECT ON public.rtg_authorizations TO authenticated;
+GRANT ALL ON public.rtg_authorizations TO service_role;
+ALTER TABLE public.rtg_authorizations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY rtg_auth_read ON public.rtg_authorizations FOR SELECT TO authenticated
+  USING ((organization_id = public.current_org() AND public.is_general_admin()) OR rtg_user_id = auth.uid());
+
+CREATE OR REPLACE FUNCTION public.rtg_authorized(p_org uuid, p_scope text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
+  SELECT public.is_rtg_admin() AND EXISTS(SELECT 1 FROM public.rtg_authorizations WHERE organization_id=p_org AND rtg_user_id=auth.uid() AND scope=p_scope AND revoked_at IS NULL) $$;
+
+CREATE TABLE public.backup_runs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES public.organizations(id),
+  requested_by uuid,
+  requested_name text NOT NULL DEFAULT '',
+  kind text NOT NULL DEFAULT 'Exportação comercial (ZIP com CSV)',
+  status text NOT NULL DEFAULT 'Em processamento',
+  files jsonb NOT NULL DEFAULT '[]'::jsonb,
+  row_count integer,
+  error text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  completed_at timestamptz
+);
+GRANT SELECT ON public.backup_runs TO authenticated;
+GRANT ALL ON public.backup_runs TO service_role;
+ALTER TABLE public.backup_runs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY backup_runs_read ON public.backup_runs FOR SELECT TO authenticated
+  USING ((organization_id = public.current_org() AND public.is_general_admin()) OR public.rtg_authorized(organization_id,'backup_history'));
+CREATE INDEX backup_runs_org_idx ON public.backup_runs(organization_id, created_at DESC);
+
+CREATE OR REPLACE FUNCTION public.backup_start() RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_id uuid; v_name text;
+BEGIN
+  IF NOT public.is_general_admin() OR NOT public.org_access_ok(public.current_org()) THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF;
+  SELECT coalesce(nullif(full_name,''),email) INTO v_name FROM public.organization_members WHERE user_id=auth.uid() AND active;
+  INSERT INTO public.backup_runs(organization_id,requested_by,requested_name) VALUES(public.current_org(),auth.uid(),coalesce(v_name,'')) RETURNING id INTO v_id;
+  RETURN v_id;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.backup_finish(p_id uuid, p_ok boolean, p_files jsonb, p_rows integer, p_error text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+BEGIN
+  UPDATE public.backup_runs SET status=CASE WHEN p_ok THEN 'Concluído' ELSE 'Falha' END, files=coalesce(p_files,'[]'::jsonb), row_count=p_rows, error=left(p_error,500), completed_at=now()
+   WHERE id=p_id AND requested_by=auth.uid() AND status='Em processamento' AND organization_id=public.current_org();
+  IF NOT FOUND THEN RAISE EXCEPTION 'Backup não encontrado'; END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.office_transfer_general_admin(p_member uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_org uuid := public.current_org(); v_old text; v_new text; v_user uuid;
+BEGIN
+  IF NOT public.is_general_admin() OR NOT public.org_access_ok(v_org) THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF;
+  SELECT email,user_id INTO v_new,v_user FROM public.organization_members WHERE id=p_member AND organization_id=v_org AND active FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Conta não encontrada, inativa ou de outro escritório'; END IF;
+  IF v_user=auth.uid() THEN RAISE EXCEPTION 'Escolha outra pessoa'; END IF;
+  SELECT email INTO v_old FROM public.organization_members WHERE user_id=auth.uid() AND organization_id=v_org FOR UPDATE;
+  UPDATE public.organization_members SET is_general_admin=false WHERE organization_id=v_org AND is_general_admin;
+  UPDATE public.organization_members SET is_general_admin=true WHERE id=p_member;
+  INSERT INTO public.admin_events(organization_id,actor,action,details) VALUES(v_org,auth.uid(),'Administração geral transferida pelo escritório',jsonb_build_object('de',v_old,'para',v_new));
+END $$;
+
+CREATE OR REPLACE FUNCTION public.office_rename_member(p_member uuid, p_name text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_org uuid; v_old text;
+BEGIN
+  SELECT organization_id,full_name INTO v_org,v_old FROM public.organization_members WHERE id=p_member;
+  IF v_org IS NULL OR NOT ((public.is_general_admin() AND v_org=public.current_org()) OR public.is_rtg_admin()) THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF;
+  IF length(trim(coalesce(p_name,''))) NOT BETWEEN 2 AND 150 THEN RAISE EXCEPTION 'Informe um nome entre 2 e 150 caracteres'; END IF;
+  UPDATE public.organization_members SET full_name=trim(p_name) WHERE id=p_member;
+  INSERT INTO public.admin_events(organization_id,actor,action,details) VALUES(v_org,auth.uid(),'Nome atualizado',jsonb_build_object('de',v_old,'para',trim(p_name)));
+END $$;
+
+CREATE OR REPLACE FUNCTION public.office_grant_rtg(p_email text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_org uuid := public.current_org(); v_user uuid;
+BEGIN
+  IF NOT public.is_general_admin() THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF;
+  SELECT u.id INTO v_user FROM auth.users u JOIN public.rtg_admins r ON r.user_id=u.id WHERE lower(u.email)=lower(trim(p_email));
+  IF v_user IS NULL THEN RAISE EXCEPTION 'Nenhuma pessoa da RTG Systems com este e-mail'; END IF;
+  IF EXISTS(SELECT 1 FROM public.rtg_authorizations WHERE organization_id=v_org AND rtg_user_id=v_user AND revoked_at IS NULL) THEN RAISE EXCEPTION 'Esta pessoa já está autorizada'; END IF;
+  INSERT INTO public.rtg_authorizations(organization_id,rtg_user_id,rtg_email,granted_by) VALUES(v_org,v_user,lower(trim(p_email)),auth.uid());
+  INSERT INTO public.admin_events(organization_id,actor,action,details) VALUES(v_org,auth.uid(),'Acesso da RTG autorizado',jsonb_build_object('email',lower(trim(p_email)),'escopo','Histórico de backups'));
+END $$;
+
+CREATE OR REPLACE FUNCTION public.office_revoke_rtg(p_id uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_email text;
+BEGIN
+  IF NOT public.is_general_admin() THEN RAISE EXCEPTION 'Acesso não autorizado'; END IF;
+  UPDATE public.rtg_authorizations SET revoked_at=now(), revoked_by=auth.uid() WHERE id=p_id AND organization_id=public.current_org() AND revoked_at IS NULL RETURNING rtg_email INTO v_email;
+  IF v_email IS NULL THEN RAISE EXCEPTION 'Autorização não encontrada'; END IF;
+  INSERT INTO public.admin_events(organization_id,actor,action,details) VALUES(public.current_org(),auth.uid(),'Acesso da RTG revogado',jsonb_build_object('email',v_email));
+END $$;
+
+DO $$ DECLARE f text; BEGIN
+  FOREACH f IN ARRAY ARRAY['rtg_authorized(uuid,text)','backup_start()','backup_finish(uuid,boolean,jsonb,integer,text)','office_transfer_general_admin(uuid)','office_rename_member(uuid,text)','office_grant_rtg(text)','office_revoke_rtg(uuid)'] LOOP
+    EXECUTE 'REVOKE ALL ON FUNCTION public.'||f||' FROM PUBLIC, anon';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.'||f||' TO authenticated, service_role';
+  END LOOP;
 END $$;
