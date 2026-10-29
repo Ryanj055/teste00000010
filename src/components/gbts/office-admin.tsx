@@ -2,13 +2,14 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { LockKeyhole, LogOut, UserPlus, RefreshCw, Sparkles } from 'lucide-react';
+import { LockKeyhole, LogOut, UserPlus, RefreshCw, Sparkles, Pencil, Send, Crown } from 'lucide-react';
 import { suggestAccess, type AccessSuggestion } from '@/lib/gbts/access-advisor.functions';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 const logo = { url: '/gbts-logo.png' };
-import { inviteMember, listMembers, removeMember, setMember, type OrgStatus } from '@/lib/gbts/admin.functions';
+import { inviteMember, listMembers, removeMember, renameMember, resendInvite, setMember, transferGeneralAdmin, type OrgStatus } from '@/lib/gbts/admin.functions';
+import { TeamAdminSection } from './admin-pages';
 import { renegotiate } from '@/lib/gbts/data.functions';
 import { dateLabel, money, schedule, today, type Schedule } from '@/lib/gbts/finance';
 import { Field, Modal } from './forms';
@@ -61,11 +62,13 @@ export function Renegotiate({ contractId, balance, onDone }: { contractId: strin
       {rows ? <Button disabled={busy} onClick={confirm}>{busy ? 'Salvando…' : 'Confirmar renegociação'}</Button> : <Button type="submit" form="reneg">Revisar cronograma</Button>}</div></Modal>}</>;
 }
 
-type Member = { id: string; email: string | null; full_name?: string; pending?: boolean; active: boolean; can_legal: boolean; can_finance: boolean };
+type Member = { id: string; email: string | null; full_name?: string; user_id?: string; is_general_admin?: boolean; pending?: boolean; active: boolean; can_legal: boolean; can_finance: boolean };
 export function TeamPage() {
-  const qc = useQueryClient(); const list = useServerFn(listMembers), invite = useServerFn(inviteMember), update = useServerFn(setMember), remove = useServerFn(removeMember);
+  const qc = useQueryClient(); const list = useServerFn(listMembers), invite = useServerFn(inviteMember), update = useServerFn(setMember), remove = useServerFn(removeMember), rename = useServerFn(renameMember), resend = useServerFn(resendInvite), transfer = useServerFn(transferGeneralAdmin);
   const q = useQuery({ queryKey: ['members'], queryFn: () => list() });
-  const [busy, setBusy] = useState(false), [confirmOff, setConfirmOff] = useState<Member | null>(null), [confirmDel, setConfirmDel] = useState<Member | null>(null), [advise, setAdvise] = useState<Member | null>(null);
+  const [busy, setBusy] = useState(false), [confirmOff, setConfirmOff] = useState<Member | null>(null), [confirmDel, setConfirmDel] = useState<Member | null>(null), [advise, setAdvise] = useState<Member | null>(null), [edit, setEdit] = useState<Member | null>(null), [handover, setHandover] = useState<Member | null>(null);
+  const meIsGA = Boolean(q.data?.members.find((x) => x.user_id === q.data?.me)?.is_general_admin);
+  async function act(fn: () => Promise<unknown>, ok: string) { try { await fn(); toast.success(ok); await qc.invalidateQueries({ queryKey: ['members'] }); await qc.invalidateQueries({ queryKey: ['team-admin'] }); await qc.invalidateQueries({ queryKey: ['access'] }); return true; } catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível concluir.'); return false; } }
   async function send(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const form = e.currentTarget; const f = new FormData(form); setBusy(true);
     try { await invite({ data: { name: String(f.get('name')), email: String(f.get('email')), finance: f.get('finance') === 'on', redirect: window.location.origin } }); toast.success('Convite enviado por e-mail.'); form.reset(); await qc.invalidateQueries({ queryKey: ['members'] }); }
@@ -73,7 +76,7 @@ export function TeamPage() {
   }
   async function change(m: Member, next: Partial<Pick<Member, 'active' | 'can_legal' | 'can_finance'>>) {
     const v = { ...m, ...next };
-    try { await update({ data: { id: m.id, active: v.active, legal: v.can_legal, finance: v.can_finance } }); toast.success('Acesso atualizado.'); await qc.invalidateQueries({ queryKey: ['members'] }); }
+    try { await update({ data: { id: m.id, active: v.active, legal: v.can_legal, finance: v.can_finance } }); toast.success('Acesso atualizado.'); await qc.invalidateQueries({ queryKey: ['members'] }); await qc.invalidateQueries({ queryKey: ['team-admin'] }); }
     catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar.'); }
   }
   return <><div className="page-heading"><div><div className="eyebrow">ADMINISTRAÇÃO DO ESCRITÓRIO</div><h1>Equipe e acessos</h1><p>Convide, desative e defina o acesso jurídico e financeiro da equipe do seu escritório.</p></div></div>
@@ -83,12 +86,18 @@ export function TeamPage() {
     <section className="panel">{q.isLoading ? <div className="empty">Carregando equipe…</div> : q.error ? <div className="empty">{q.error.message}</div> :
       <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>PESSOA</th><th>JURÍDICO</th><th>FINANCEIRO</th><th>SITUAÇÃO</th><th>DESDE</th><th /></tr></thead><tbody>
         {q.data?.members.map((m) => { const self = m.user_id === q.data.me; const locked = self || m.is_general_admin;
-          return <tr key={m.id}><td>{m.full_name && <span className="block font-semibold">{m.full_name}</span>}{m.email}{m.is_general_admin && <span className="cell-secondary block">Administrador geral (definido pela RTG)</span>}{self && <span className="cell-secondary block">Você</span>}</td>
+          return <tr key={m.id}><td>{m.full_name && <span className="block font-semibold">{m.full_name}</span>}{m.email}{m.is_general_admin && <span className="cell-secondary block">Administração geral</span>}{self && <span className="cell-secondary block">Você</span>}</td>
             <td><input type="checkbox" aria-label={`Acesso jurídico de ${m.email}`} disabled={locked} checked={m.can_legal} onChange={(e) => change(m, { can_legal: e.target.checked })} /></td>
             <td><input type="checkbox" aria-label={`Acesso financeiro de ${m.email}`} disabled={locked} checked={m.can_finance} onChange={(e) => change(m, { can_finance: e.target.checked })} /></td>
-            <td><span className={`badge ${m.active ? 'paid' : 'partial'}`}>{!m.active ? 'Desativado' : m.pending ? 'Convite pendente' : 'Ativo'}</span></td><td>{dateLabel(m.created_at)}</td>
-            <td>{!locked && (m.active ? <Button variant="outline" size="sm" onClick={() => setConfirmOff(m)}>Desativar</Button> : <Button variant="outline" size="sm" onClick={() => change(m, { active: true })}>Reativar</Button>)}{!locked && m.active && <Button variant="ghost" size="sm" className="ml-2" onClick={() => setAdvise(m)}><Sparkles size={14} />Sugerir acessos</Button>}{!locked && <Button variant="ghost" size="sm" className="ml-2 text-destructive" onClick={() => setConfirmDel(m)}>Remover</Button>}</td></tr>; })}
+            <td><span className={`badge ${m.active && !m.pending ? 'paid' : 'partial'}`}>{!m.active ? 'Conta desativada' : m.pending ? 'Convite pendente' : 'Convite aceito · ativa'}</span></td><td>{dateLabel(m.created_at)}</td>
+            <td>{!locked && (m.active ? <Button variant="outline" size="sm" onClick={() => setConfirmOff(m)}>Desativar</Button> : <Button variant="outline" size="sm" onClick={() => change(m, { active: true })}>Reativar</Button>)}{!locked && m.active && <Button variant="ghost" size="sm" className="ml-2" onClick={() => setAdvise(m)}><Sparkles size={14} />Sugerir acessos</Button>}{!self && <Button variant="ghost" size="sm" className="ml-2" onClick={() => setEdit(m)}><Pencil size={14} />Editar</Button>}{!locked && m.active && m.pending && <Button variant="ghost" size="sm" className="ml-2" onClick={() => act(() => resend({ data: { id: m.id, redirect: window.location.origin } }), 'Convite reenviado pelo serviço de e-mail.')}><Send size={14} />Reenviar convite</Button>}{meIsGA && !locked && m.active && !m.pending && <Button variant="ghost" size="sm" className="ml-2" onClick={() => setHandover(m)}><Crown size={14} />Tornar administração geral</Button>}{!locked && <Button variant="ghost" size="sm" className="ml-2 text-destructive" onClick={() => setConfirmDel(m)}>Remover</Button>}</td></tr>; })}
       </tbody></table></div>}</section>
+    {edit && <Modal title="Editar perfil" onClose={() => setEdit(null)}><form onSubmit={async (e) => { e.preventDefault(); const name = String(new FormData(e.currentTarget).get('name')); if (await act(() => rename({ data: { id: edit.id, name } }), 'Perfil atualizado.')) setEdit(null); }}><div className="modal-body">
+      <Field label="Nome" full><input name="name" required minLength={2} maxLength={150} defaultValue={edit.full_name ?? ''} /></Field><p className="text-xs mt-2">E-mail: {edit.email} (o e-mail de acesso não pode ser alterado aqui).</p></div>
+      <div className="modal-footer"><Button type="button" variant="outline" onClick={() => setEdit(null)}>Cancelar</Button><Button>Salvar</Button></div></form></Modal>}
+    {handover && <Modal title="Transferir administração geral" onClose={() => setHandover(null)}><div className="modal-body"><p className="text-sm">{handover.full_name || handover.email} passará a ser a administração geral do escritório. Você deixará de administrar a equipe, mas mantém seus acessos jurídico e financeiro atuais. A troca fica registrada no histórico.</p></div>
+      <div className="modal-footer"><Button variant="outline" onClick={() => setHandover(null)}>Cancelar</Button><Button onClick={async () => { if (await act(() => transfer({ data: { id: handover.id } }), 'Administração geral transferida.')) setHandover(null); }}>Transferir</Button></div></Modal>}
+    {meIsGA && <TeamAdminSection />}
     {advise && <AccessAdvisor member={advise} onClose={() => setAdvise(null)} onApply={async (r) => { await change(advise, { can_legal: r.legal, can_finance: r.finance }); setAdvise(null); }} />}
     {confirmOff && <Modal title="Desativar acesso" onClose={() => setConfirmOff(null)}><div className="modal-body"><p className="text-sm">{confirmOff.email} deixará de acessar o escritório. Os registros criados pela pessoa são preservados.</p></div>
       <div className="modal-footer"><Button variant="outline" onClick={() => setConfirmOff(null)}>Cancelar</Button><Button variant="destructive" onClick={async () => { await change(confirmOff, { active: false }); setConfirmOff(null); }}>Desativar</Button></div></Modal>}
