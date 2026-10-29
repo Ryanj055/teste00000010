@@ -231,6 +231,9 @@ export type Database = {
       contracts: {
         Row: {
           client_id: string
+          close_note: string | null
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
           demo: boolean
           expected_method: string | null
@@ -247,6 +250,9 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          close_note?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           demo?: boolean
           expected_method?: string | null
@@ -263,6 +269,9 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          close_note?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           demo?: boolean
           expected_method?: string | null
@@ -948,6 +957,10 @@ export type Database = {
       }
       backup_start: { Args: never; Returns: string }
       can_access: { Args: { p_org: string }; Returns: boolean }
+      close_contract: {
+        Args: { p_contract: string; p_note: string }
+        Returns: undefined
+      }
       create_contract: {
         Args: {
           p_client: string
