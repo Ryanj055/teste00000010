@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { zipSync, strToU8 } from 'fflate';
-import { Archive, CalendarClock, Download, ShieldOff, ShieldPlus, UserX } from 'lucide-react';
+import { Archive, CalendarClock, ShieldOff, ShieldPlus, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,4 +113,3 @@ export function ProfilePage({ email, generalAdmin }: { email: string; generalAdm
   </>;
 }
 
-export { Download };
