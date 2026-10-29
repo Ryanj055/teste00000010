@@ -65,7 +65,7 @@ type Member = { id: string; email: string | null; full_name?: string; pending?: 
 export function TeamPage() {
   const qc = useQueryClient(); const list = useServerFn(listMembers), invite = useServerFn(inviteMember), update = useServerFn(setMember), remove = useServerFn(removeMember);
   const q = useQuery({ queryKey: ['members'], queryFn: () => list() });
-  const [busy, setBusy] = useState(false), [confirmOff, setConfirmOff] = useState<Member | null>(null), [confirmDel, setConfirmDel] = useState<Member | null>(null);
+  const [busy, setBusy] = useState(false), [confirmOff, setConfirmOff] = useState<Member | null>(null), [confirmDel, setConfirmDel] = useState<Member | null>(null), [advise, setAdvise] = useState<Member | null>(null);
   async function send(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const form = e.currentTarget; const f = new FormData(form); setBusy(true);
     try { await invite({ data: { name: String(f.get('name')), email: String(f.get('email')), finance: f.get('finance') === 'on', redirect: window.location.origin } }); toast.success('Convite enviado por e-mail.'); form.reset(); await qc.invalidateQueries({ queryKey: ['members'] }); }
