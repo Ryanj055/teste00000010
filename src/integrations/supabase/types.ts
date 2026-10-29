@@ -119,6 +119,56 @@ export type Database = {
           },
         ]
       }
+      backup_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          files: Json
+          id: string
+          kind: string
+          organization_id: string
+          requested_by: string | null
+          requested_name: string
+          row_count: number | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          files?: Json
+          id?: string
+          kind?: string
+          organization_id: string
+          requested_by?: string | null
+          requested_name?: string
+          row_count?: number | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          files?: Json
+          id?: string
+          kind?: string
+          organization_id?: string
+          requested_by?: string | null
+          requested_name?: string
+          row_count?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backup_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -775,6 +825,50 @@ export type Database = {
         }
         Relationships: []
       }
+      rtg_authorizations: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          organization_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          rtg_email: string
+          rtg_user_id: string
+          scope: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          organization_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          rtg_email: string
+          rtg_user_id: string
+          scope?: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          organization_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          rtg_email?: string
+          rtg_user_id?: string
+          scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rtg_authorizations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -842,6 +936,17 @@ export type Database = {
       }
     }
     Functions: {
+      backup_finish: {
+        Args: {
+          p_error: string
+          p_files: Json
+          p_id: string
+          p_ok: boolean
+          p_rows: number
+        }
+        Returns: undefined
+      }
+      backup_start: { Args: never; Returns: string }
       can_access: { Args: { p_org: string }; Returns: boolean }
       create_contract: {
         Args: {
@@ -887,6 +992,16 @@ export type Database = {
       is_partner: { Args: never; Returns: boolean }
       is_rtg_admin: { Args: never; Returns: boolean }
       my_access: { Args: never; Returns: Json }
+      office_grant_rtg: { Args: { p_email: string }; Returns: undefined }
+      office_rename_member: {
+        Args: { p_member: string; p_name: string }
+        Returns: undefined
+      }
+      office_revoke_rtg: { Args: { p_id: string }; Returns: undefined }
+      office_transfer_general_admin: {
+        Args: { p_member: string }
+        Returns: undefined
+      }
       org_access_ok: { Args: { p_org: string }; Returns: boolean }
       record_fee_payout: {
         Args: {
@@ -921,6 +1036,10 @@ export type Database = {
       renegotiate_contract: {
         Args: { p_contract: string; p_reason: string; p_schedule: Json }
         Returns: number
+      }
+      rtg_authorized: {
+        Args: { p_org: string; p_scope: string }
+        Returns: boolean
       }
       rtg_save_org: {
         Args: {
