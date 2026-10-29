@@ -42,3 +42,7 @@
 - [x] Etapa 4: menu agrupado por área.
 - [ ] Revisão de textos e áreas jurídica/financeira (seções 11+ do documento) — próxima rodada.
 - [ ] Publicar — aguarda autorização.
+
+## Ajustes — 29/10/2026
+- [x] Finalizar contrato quitado (com confirmação, histórico preservado).
+- [x] Excluir cliente sem vínculos; com vínculos, aviso detalhado e opção de arquivar.
