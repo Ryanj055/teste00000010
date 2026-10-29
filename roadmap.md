@@ -33,3 +33,9 @@
 - [x] Administrador geral designado somente pela RTG pelo Painel RTG; Gabriel como RTG e Ryan como administrador geral de teste.
 - [x] Verificações de segurança (51 novas + 22 de isolamento + 34 financeiras) e testes automáticos.
 - [ ] Publicar a nova versão — aguarda sua decisão (o site publicado ainda usa as telas antigas de equipe).
+
+## Revisão definitiva — 29/10/2026 (em etapas)
+- [ ] Etapa 1: desligar cadastro público; domínio de e-mail e convite profissional — aguarda configuração do domínio pelo usuário.
+- [ ] Etapa 2: Equipe e Acessos completa (editar, reenviar, reativar, administradores pelo escritório, autorização RTG, remover meu perfil).
+- [ ] Etapa 3: Central de Backups (exportação ZIP, histórico, lembrete de sexta).
+- [ ] Etapa 4: menu reorganizado, linguagem neutra, revisão das áreas jurídica/financeira e testes.
