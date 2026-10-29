@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedBackupsRouteImport } from './routes/_authenticated/backups'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCobrancasRouteImport } from './routes/_authenticated/cobrancas'
 import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
@@ -20,6 +21,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDespesasRouteImport } from './routes/_authenticated/despesas'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedHonorariosRouteImport } from './routes/_authenticated/honorarios'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedProcessosRouteImport } from './routes/_authenticated/processos'
 import { Route as AuthenticatedRecebiveisRouteImport } from './routes/_authenticated/recebiveis'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
@@ -45,6 +47,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBackupsRoute = AuthenticatedBackupsRouteImport.update({
+  id: '/backups',
+  path: '/backups',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
@@ -79,6 +86,11 @@ const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
 const AuthenticatedHonorariosRoute = AuthenticatedHonorariosRouteImport.update({
   id: '/honorarios',
   path: '/honorarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProcessosRoute = AuthenticatedProcessosRouteImport.update({
@@ -116,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/backups': typeof AuthenticatedBackupsRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/cobrancas': typeof AuthenticatedCobrancasRoute
   '/contratos': typeof AuthenticatedContratosRoute
@@ -123,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/despesas': typeof AuthenticatedDespesasRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/honorarios': typeof AuthenticatedHonorariosRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/processos': typeof AuthenticatedProcessosRoute
   '/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -134,6 +148,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/backups': typeof AuthenticatedBackupsRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/cobrancas': typeof AuthenticatedCobrancasRoute
   '/contratos': typeof AuthenticatedContratosRoute
@@ -141,6 +156,7 @@ export interface FileRoutesByTo {
   '/despesas': typeof AuthenticatedDespesasRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/honorarios': typeof AuthenticatedHonorariosRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/processos': typeof AuthenticatedProcessosRoute
   '/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -154,6 +170,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/backups': typeof AuthenticatedBackupsRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/cobrancas': typeof AuthenticatedCobrancasRoute
   '/_authenticated/contratos': typeof AuthenticatedContratosRoute
@@ -161,6 +178,7 @@ export interface FileRoutesById {
   '/_authenticated/despesas': typeof AuthenticatedDespesasRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/honorarios': typeof AuthenticatedHonorariosRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/processos': typeof AuthenticatedProcessosRoute
   '/_authenticated/recebiveis': typeof AuthenticatedRecebiveisRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -174,6 +192,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/backups'
     | '/clientes'
     | '/cobrancas'
     | '/contratos'
@@ -181,6 +200,7 @@ export interface FileRouteTypes {
     | '/despesas'
     | '/equipe'
     | '/honorarios'
+    | '/perfil'
     | '/processos'
     | '/recebiveis'
     | '/relatorios'
@@ -192,6 +212,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/backups'
     | '/clientes'
     | '/cobrancas'
     | '/contratos'
@@ -199,6 +220,7 @@ export interface FileRouteTypes {
     | '/despesas'
     | '/equipe'
     | '/honorarios'
+    | '/perfil'
     | '/processos'
     | '/recebiveis'
     | '/relatorios'
@@ -211,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/backups'
     | '/_authenticated/clientes'
     | '/_authenticated/cobrancas'
     | '/_authenticated/contratos'
@@ -218,6 +241,7 @@ export interface FileRouteTypes {
     | '/_authenticated/despesas'
     | '/_authenticated/equipe'
     | '/_authenticated/honorarios'
+    | '/_authenticated/perfil'
     | '/_authenticated/processos'
     | '/_authenticated/recebiveis'
     | '/_authenticated/relatorios'
@@ -264,6 +288,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/backups': {
+      id: '/_authenticated/backups'
+      path: '/backups'
+      fullPath: '/backups'
+      preLoaderRoute: typeof AuthenticatedBackupsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/clientes': {
       id: '/_authenticated/clientes'
@@ -314,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHonorariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/processos': {
       id: '/_authenticated/processos'
       path: '/processos'
@@ -360,6 +398,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBackupsRoute: typeof AuthenticatedBackupsRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedCobrancasRoute: typeof AuthenticatedCobrancasRoute
   AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
@@ -367,6 +406,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDespesasRoute: typeof AuthenticatedDespesasRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedHonorariosRoute: typeof AuthenticatedHonorariosRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedProcessosRoute: typeof AuthenticatedProcessosRoute
   AuthenticatedRecebiveisRoute: typeof AuthenticatedRecebiveisRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
@@ -374,6 +414,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBackupsRoute: AuthenticatedBackupsRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedCobrancasRoute: AuthenticatedCobrancasRoute,
   AuthenticatedContratosRoute: AuthenticatedContratosRoute,
@@ -381,6 +422,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDespesasRoute: AuthenticatedDespesasRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedHonorariosRoute: AuthenticatedHonorariosRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedProcessosRoute: AuthenticatedProcessosRoute,
   AuthenticatedRecebiveisRoute: AuthenticatedRecebiveisRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
