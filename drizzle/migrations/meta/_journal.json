@@ -99,6 +99,13 @@
       "when": 1793284589617,
       "tag": "0013_close_contract_and_client_links",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793297068548,
+      "tag": "0014_general_admin_permanent_client_delete",
+      "breakpoints": true
     }
   ]
 }
