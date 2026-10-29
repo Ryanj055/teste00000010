@@ -40,6 +40,14 @@ try{
  check('Reversal reopens exactly 1000, not a new fee',unwrap(await db.from('receivables').select('balance').eq('contract_id',contract)).reduce((s,x)=>s+Math.round(Number(x.balance)*100),0)===100000);
  check('Receipt ledger reconciles reversal to zero',unwrap(await db.from('receipt_ledger').select('amount')).reduce((s,x)=>s+Math.round(Number(x.amount)*100),0)===0);
  check('Payout ledger reconciles reversal to zero',unwrap(await db.from('payout_ledger').select('amount')).reduce((s,x)=>s+Math.round(Number(x.amount)*100),0)===0);
+  check('Contract with open balance cannot be closed',Boolean((await db.rpc('close_contract',{p_contract:contract,p_note:''})).error));
+  const paidContract=unwrap(await db.rpc('create_contract_review',{p_client:customer,p_number:'REVIEW-2',p_subject:'Close check',p_responsible:'Responsible person',p_modality:'Fixos',p_total:100,p_signed:date,p_schedule:[{label:'Única',amount:100,due_date:date}],p_notes:'',p_method:'Pix'}));
+  const only=unwrap(await db.from('receivables').select('id').eq('contract_id',paidContract))[0]?.id;if(!only)throw new Error('Missing installment');
+  unwrap(await db.rpc('record_payment',{p_installment:only,p_amount:100,p_date:date,p_method:'Pix',p_key:crypto.randomUUID(),p_reference:'',p_notes:''}));
+  check('Settled contract is still active before closing',unwrap(await db.from('contracts').select('status').eq('id',paidContract).single()).status==='Ativo');
+  check('Settled contract can be closed',!(await db.rpc('close_contract',{p_contract:paidContract,p_note:'Quitado'})).error);
+  check('Closed contract keeps status and history',unwrap(await db.from('contracts').select('status').eq('id',paidContract).single()).status==='Encerrado'&&unwrap(await db.from('receivables').select('paid').eq('contract_id',paidContract)).length===1&&unwrap(await db.from('payments').select('id').eq('installment_id',only)).length===1);
+  check('Closed contract cannot be closed twice',Boolean((await db.rpc('close_contract',{p_contract:paidContract,p_note:''})).error));
  check('Linked client cannot be deleted',Boolean((await db.rpc('remove_client',{p_client:customer,p_archive:false})).error));
  unwrap(await db.rpc('remove_client',{p_client:customer,p_archive:true}));check('Linked client archive preserves contract',unwrap(await db.from('contracts').select('id').eq('id',contract)).length===1);
  for(const t of ['fee_divisions','fee_payouts','associates','finance_events','receipt_ledger','payout_ledger'] as const){check(`Other office cannot read ${t}`,unwrap(await b.db.from(t).select('*')).length===0);check(`RTG cannot read ${t}`,unwrap(await r.db.from(t).select('*')).length===0);}
