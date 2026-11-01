@@ -106,6 +106,13 @@
       "when": 1793297068548,
       "tag": "0014_general_admin_permanent_client_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793497918621,
+      "tag": "0015_client_contract_complements_and_documents",
+      "breakpoints": true
     }
   ]
 }
