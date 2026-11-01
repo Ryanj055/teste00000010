@@ -172,55 +172,118 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          cep: string | null
           code: string
           created_at: string
           demo: boolean
           document: string | null
           email: string | null
           id: string
+          marital_status: string | null
           name: string
+          nationality: string | null
           notes: string | null
           organization_id: string
           phone: string | null
+          profession: string | null
           responsible: string
+          rg: string | null
+          rg_issuer: string | null
           status: string
           type: string
         }
         Insert: {
           address?: string | null
+          cep?: string | null
           code?: string
           created_at?: string
           demo?: boolean
           document?: string | null
           email?: string | null
           id?: string
+          marital_status?: string | null
           name: string
+          nationality?: string | null
           notes?: string | null
           organization_id?: string
           phone?: string | null
+          profession?: string | null
           responsible?: string
+          rg?: string | null
+          rg_issuer?: string | null
           status?: string
           type?: string
         }
         Update: {
           address?: string | null
+          cep?: string | null
           code?: string
           created_at?: string
           demo?: boolean
           document?: string | null
           email?: string | null
           id?: string
+          marital_status?: string | null
           name?: string
+          nationality?: string | null
           notes?: string | null
           organization_id?: string
           phone?: string | null
+          profession?: string | null
           responsible?: string
+          rg?: string | null
+          rg_issuer?: string | null
           status?: string
           type?: string
         }
         Relationships: [
           {
             foreignKeyName: "clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_documents: {
+        Row: {
+          contract_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          organization_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          organization_id?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          organization_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_documents_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_documents_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -243,6 +306,7 @@ export type Database = {
           number: string
           organization_id: string
           responsible: string
+          service_description: string | null
           signed_at: string
           status: string
           subject: string
@@ -262,6 +326,7 @@ export type Database = {
           number: string
           organization_id?: string
           responsible: string
+          service_description?: string | null
           signed_at?: string
           status?: string
           subject: string
@@ -281,6 +346,7 @@ export type Database = {
           number?: string
           organization_id?: string
           responsible?: string
+          service_description?: string | null
           signed_at?: string
           status?: string
           subject?: string
@@ -991,6 +1057,7 @@ export type Database = {
         Returns: string
       }
       current_org: { Args: never; Returns: string }
+      delete_contract: { Args: { p_contract: string }; Returns: undefined }
       has_finance: { Args: { p_org: string }; Returns: boolean }
       has_legal: { Args: { p_org: string }; Returns: boolean }
       has_role: {
@@ -1095,6 +1162,18 @@ export type Database = {
       }
       set_member_status: {
         Args: { p_active: boolean; p_member: string; p_role: string }
+        Returns: undefined
+      }
+      update_contract: {
+        Args: {
+          p_contract: string
+          p_description: string
+          p_method: string
+          p_modality: string
+          p_notes: string
+          p_responsible: string
+          p_subject: string
+        }
         Returns: undefined
       }
       void_financial_entry: {
