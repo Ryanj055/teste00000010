@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Database } from '@/integrations/supabase/types';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { clientSchema, contractSchema } from './finance';
+import { clientSchema, contractSchema, contractUpdateSchema } from './finance';
 type Tables=Database['public']['Tables'];type Views=Database['public']['Views'];
 type Scope={legal:boolean;finance:boolean};
 /** Reads every page so totals never stop at the API row limit. */
@@ -11,7 +11,7 @@ async function all<T>(page:(from:number,to:number)=>PromiseLike<{data:T[]|null;e
 const none=<T,>():Promise<T[]>=>Promise.resolve([]);
 async function readWorkspace(db:SupabaseClient<Database>,scope:Scope){const f=scope.finance,l=scope.legal;
 const clientColumns=l?'*':'id,code,name,type,status,responsible,organization_id,created_at,demo';
-const [clients,contracts,receivables,payments,expenses,cases,associates,divisions,payouts,events,ledger,payoutLedger]=await Promise.all([
+const [clients,contracts,receivables,payments,expenses,cases,associates,divisions,payouts,events,ledger,payoutLedger,documents]=await Promise.all([
 all<Tables['clients']['Row']>((a,b)=>db.from('clients').select(clientColumns).order('code').range(a,b) as never),
 f?all<Tables['contracts']['Row']>((a,b)=>db.from('contracts').select('*').order('number').range(a,b)):none<Tables['contracts']['Row']>(),
 f?all<Views['receivables']['Row']>((a,b)=>db.from('receivables').select('*').order('due_date').range(a,b)):none<Views['receivables']['Row']>(),
@@ -24,8 +24,9 @@ f?all<Tables['fee_payouts']['Row']>((a,b)=>db.from('fee_payouts').select('*').or
 f?all<Tables['finance_events']['Row']>((a,b)=>db.from('finance_events').select('*').order('created_at').range(a,b)):none<Tables['finance_events']['Row']>(),
 f?all<Views['receipt_ledger']['Row']>((a,b)=>db.from('receipt_ledger').select('*').order('effective_date').range(a,b)):none<Views['receipt_ledger']['Row']>(),
 f?all<Views['payout_ledger']['Row']>((a,b)=>db.from('payout_ledger').select('*').order('effective_date').range(a,b)):none<Views['payout_ledger']['Row']>(),
+f?all<Tables['contract_documents']['Row']>((a,b)=>db.from('contract_documents').select('*').order('created_at').range(a,b)):none<Tables['contract_documents']['Row']>(),
 ]);
-return {clients,contracts,receivables,payments,expenses,cases,associates,divisions,payouts,events,ledger,payoutLedger};}
+return {clients,contracts,receivables,payments,expenses,cases,associates,divisions,payouts,events,ledger,payoutLedger,documents};}
 export const getWorkspace=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).handler(async({context})=>{const {data:org}=await context.supabase.rpc('current_org');if(!org)throw new Error('O acesso do seu escritório não está disponível no momento.');const [legal,finance]=await Promise.all([context.supabase.rpc('has_legal',{p_org:org}),context.supabase.rpc('has_finance',{p_org:org})]);const scope={legal:Boolean(legal.data),finance:Boolean(finance.data)};if(!scope.legal&&!scope.finance)throw new Error('Sua conta não possui permissões ativas neste escritório.');return readWorkspace(context.supabase,scope);});
 export type WorkspaceData=Awaited<ReturnType<typeof readWorkspace>>;
 export const saveClient=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator((input:unknown)=>clientSchema.parse(input)).handler(async({data,context})=>{const {id,...fields}=data;const result=id?await context.supabase.from('clients').update(fields).eq('id',id).select('id').single():await context.supabase.from('clients').insert(fields).select('id').single();if(result.error)throw new Error(result.error.code==='23505'?'Documento já cadastrado.':'Não foi possível salvar o cliente. Verifique suas permissões.');return result.data;});
