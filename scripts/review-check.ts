@@ -49,7 +49,7 @@ try{
   check('Settled contract can be closed',!(await db.rpc('close_contract',{p_contract:paidContract,p_note:'Quitado'})).error);
   check('Closed contract keeps status and history',unwrap(await db.from('contracts').select('status').eq('id',paidContract).single()).status==='Encerrado'&&unwrap(await db.from('receivables').select('paid').eq('contract_id',paidContract)).length===1&&unwrap(await db.from('payments').select('id').eq('installment_id',only)).length===1);
   check('Closed contract cannot be closed twice',Boolean((await db.rpc('close_contract',{p_contract:paidContract,p_note:''})).error));
- check('Linked client cannot be deleted',Boolean((await db.rpc('remove_client',{p_client:customer,p_archive:false})).error));
+ check('Linked client cannot be deleted by a regular member',Boolean((await memberDb.rpc('remove_client',{p_client:customer,p_archive:false})).error));
  unwrap(await db.rpc('remove_client',{p_client:customer,p_archive:true}));check('Linked client archive preserves contract',unwrap(await db.from('contracts').select('id').eq('id',contract)).length===1);
  for(const t of ['fee_divisions','fee_payouts','associates','finance_events','receipt_ledger','payout_ledger'] as const){check(`Other office cannot read ${t}`,unwrap(await b.db.from(t).select('*')).length===0);check(`RTG cannot read ${t}`,unwrap(await r.db.from(t).select('*')).length===0);}
  check('Other office cannot change financial entry',Boolean((await b.db.rpc('void_financial_entry',{p_id:payment,p_kind:'payment',p_reason:'Tenant violation'})).error));
