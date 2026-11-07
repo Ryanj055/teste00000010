@@ -291,6 +291,32 @@ export type Database = {
           },
         ]
       }
+      contract_number_counters: {
+        Row: {
+          last_value: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_value?: number
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_value?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_number_counters_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           client_id: string
@@ -1027,12 +1053,27 @@ export type Database = {
         Args: { p_contract: string; p_note: string }
         Returns: undefined
       }
+      contract_number_max: { Args: { p_org: string }; Returns: number }
       create_contract: {
         Args: {
           p_client: string
           p_modality: string
           p_notes?: string
           p_number: string
+          p_responsible: string
+          p_schedule: Json
+          p_signed: string
+          p_subject: string
+          p_total: number
+        }
+        Returns: string
+      }
+      create_contract_auto: {
+        Args: {
+          p_client: string
+          p_method: string
+          p_modality: string
+          p_notes: string
           p_responsible: string
           p_schedule: Json
           p_signed: string
@@ -1058,6 +1099,7 @@ export type Database = {
       }
       current_org: { Args: never; Returns: string }
       delete_contract: { Args: { p_contract: string }; Returns: undefined }
+      format_contract_number: { Args: { p_n: number }; Returns: string }
       has_finance: { Args: { p_org: string }; Returns: boolean }
       has_legal: { Args: { p_org: string }; Returns: boolean }
       has_role: {
@@ -1072,6 +1114,7 @@ export type Database = {
       is_partner: { Args: never; Returns: boolean }
       is_rtg_admin: { Args: never; Returns: boolean }
       my_access: { Args: never; Returns: Json }
+      next_contract_number: { Args: never; Returns: string }
       office_grant_rtg: { Args: { p_email: string }; Returns: undefined }
       office_rename_member: {
         Args: { p_member: string; p_name: string }
