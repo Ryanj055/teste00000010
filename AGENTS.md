@@ -26,3 +26,4 @@
 - The general-admin guard trusts `current_user` (privileged backend vs `authenticated`/`anon`), never session settings a client could set; account removal deletes the auth identity server-side while business rows keep plain UUIDs.
 - AI features call Lovable AI Gateway only from server functions (helper in `src/lib/gbts/ai-gateway.server.ts`); AI output is advisory and permission changes always go through the existing access RPCs so the database stays the security boundary.
 - Contract numbers are assigned only inside `create_contract_auto` (per-office locked counter, never below the highest existing trailing number) so concurrent saves never collide and deleted numbers are not reused.
+- Office chart presentation is shared in office-charts; cases and reports retain existing queries and financial aggregations so visual changes cannot write records or redefine totals.
