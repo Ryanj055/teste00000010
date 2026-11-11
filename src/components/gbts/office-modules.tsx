@@ -406,8 +406,9 @@ export function CasesPage() {
                       color: "var(--foreground)",
                     }}
                   />
-                  <Bar name="Cadastrados" dataKey="created" fill="var(--info)" maxBarSize={32} />
+                  <Bar isAnimationActive={false} name="Cadastrados" dataKey="created" fill="var(--info)" maxBarSize={32} />
                   <Bar
+                    isAnimationActive={false}
                     name="Encerrados com data"
                     dataKey="closed"
                     fill="var(--success)"

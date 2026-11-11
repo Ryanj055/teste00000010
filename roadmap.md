@@ -2,7 +2,7 @@
 ## Reformulação visual — 10/11/2026
 - [x] Processos: tabela no computador, cartões no celular, filtros e gráficos com dados existentes.
 - [x] Relatórios: barras comparativas e distribuição de contratos, sem mudar cálculos.
-- [ ] Validar telas autenticadas sem gravar dados; preservar banco e publicação.
+- [x] Validar telas autenticadas sem gravar dados; preservar banco e publicação (consulta, filtros e abertura de edição sem salvar; 24 testes aprovados).
 - [x] Fundação: identidade, navegação, login, recuperação e permissões.
 - [x] Clientes: cadastro, edição, consulta e arquivamento.
 - [x] Contratos: cronograma conciliado e indicadores.
