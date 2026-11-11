@@ -53,6 +53,7 @@ export function DistributionChart({
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
+                  isAnimationActive={false}
                   data={values}
                   dataKey="value"
                   nameKey="name"
@@ -139,6 +140,7 @@ export function CountBars({
                 />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Bar
+                  isAnimationActive={false}
                   dataKey="value"
                   name="Processos"
                   fill="var(--info)"
@@ -222,6 +224,7 @@ export function CashComparison({
                 />
                 <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => money(value)} />
                 <Bar
+                  isAnimationActive={false}
                   dataKey="received"
                   name="Recebimentos realizados"
                   fill="var(--info)"
@@ -229,6 +232,7 @@ export function CashComparison({
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
+                  isAnimationActive={false}
                   dataKey="expense"
                   name="Despesas pagas"
                   fill="var(--gold)"
